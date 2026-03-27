@@ -1,10 +1,10 @@
 import apiClient from './client';
-import type {
-  Order,
-  CreateOrderPayload,
-  AddOrderItemPayload,
-  OrderFilters,
-} from '@/types';
+import type { Order, CreateOrderPayload, AddItemPayload } from '@/types';
+
+interface OrderFilters {
+  status?: string;
+  table_number?: number;
+}
 
 export const getOrdersAsync = async (filters?: OrderFilters): Promise<Order[]> => {
   const params: Record<string, string | number> = {};
@@ -14,30 +14,17 @@ export const getOrdersAsync = async (filters?: OrderFilters): Promise<Order[]> =
   return data;
 };
 
-export const createOrderAsync = async (
-  payload: CreateOrderPayload
-): Promise<Order> => {
+export const createOrderAsync = async (payload: CreateOrderPayload): Promise<Order> => {
   const { data } = await apiClient.post<Order>('orders/', payload);
   return data;
 };
 
-export const updateOrderStatusAsync = async (
-  id: number,
-  status: string
-): Promise<Order> => {
-  const { data } = await apiClient.patch<Order>(`orders/${id}/status/`, {
-    status,
-  });
+export const updateOrderStatusAsync = async (id: number, status: string): Promise<Order> => {
+  const { data } = await apiClient.patch<Order>(`orders/${id}/status/`, { status });
   return data;
 };
 
-export const addOrderItemAsync = async (
-  orderId: number,
-  payload: AddOrderItemPayload
-): Promise<Order> => {
-  const { data } = await apiClient.post<Order>(
-    `orders/${orderId}/add_item/`,
-    payload
-  );
+export const addOrderItemAsync = async (orderId: number, payload: AddItemPayload): Promise<Order> => {
+  const { data } = await apiClient.post<Order>(`orders/${orderId}/add_item/`, payload);
   return data;
 };

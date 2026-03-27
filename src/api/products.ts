@@ -1,9 +1,12 @@
 import apiClient from './client';
-import type { Product, ProductFilters } from '@/types';
+import type { Product } from '@/types';
 
-export const getProductsAsync = async (
-  filters?: ProductFilters
-): Promise<Product[]> => {
+interface ProductFilters {
+  category?: number;
+  available?: boolean;
+}
+
+export const getProductsAsync = async (filters?: ProductFilters): Promise<Product[]> => {
   const params: Record<string, string | number | boolean> = {};
   if (filters?.category) params.category = filters.category;
   if (filters?.available !== undefined) params.available = filters.available;
@@ -11,12 +14,7 @@ export const getProductsAsync = async (
   return data;
 };
 
-export const patchProductAvailabilityAsync = async (
-  id: number,
-  available: boolean
-): Promise<Product> => {
-  const { data } = await apiClient.patch<Product>(`products/${id}/`, {
-    available,
-  });
+export const patchProductAvailabilityAsync = async (id: number, available: boolean): Promise<Product> => {
+  const { data } = await apiClient.patch<Product>(`products/${id}/`, { available });
   return data;
 };

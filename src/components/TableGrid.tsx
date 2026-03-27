@@ -1,87 +1,53 @@
+import { useState } from 'react';
 import type { Order } from '@/types';
+import { useOrders } from '@/hooks/useOrders';
+import { Utensils } from 'lucide-react';
+
+const TABLES = Array.from({ length: 12 }, (_, i) => i + 1);
 
 interface TableGridProps {
-  orders: Order[] | undefined;
-  selectedTableId: number | null;
-  onTableSelect: (tableNumber: number) => void;
+  selectedTable: number | null;
+  onSelectTable: (table: number) => void;
 }
 
-export const TableGrid = ({
-  orders = [],
-  selectedTableId,
-  onTableSelect,
-}: TableGridProps) => {
-  // Generate table numbers 1-12
-  const tables = Array.from({ length: 12 }, (_, i) => i + 1);
+const statusColor: Record<string, string> = {
+  pending: 'bg-amber-500/20 border-amber-500/50 text-amber-300',
+  preparing: 'bg-blue-500/20 border-blue-500/50 text-blue-300',
+  ready: 'bg-green-500/20 border-green-500/50 text-green-300',
+  delivered: 'bg-muted/30 border-border text-muted-foreground',
+  free: 'bg-card/60 border-border text-muted-foreground hover:border-primary/50',
+};
 
-  const getTableOrder = (tableNumber: number): Order | undefined => {
-    return orders?.find((order) => order.table_number === tableNumber);
-  };
+export default function TableGrid({ selectedTable, onSelectTable }: TableGridProps) {
+  const { data: orders } = useOrders();
 
-  const getTableStatus = (tableNumber: number) => {
-    const order = getTableOrder(tableNumber);
-    if (!order) return 'free';
-    return order.status;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'free':
-        return 'bg-green-600 hover:bg-green-700';
-      case 'pending':
-        return 'bg-yellow-600 hover:bg-yellow-700';
-      case 'preparing':
-        return 'bg-orange-600 hover:bg-orange-700';
-      case 'ready':
-        return 'bg-blue-600 hover:bg-blue-700';
-      case 'delivered':
-        return 'bg-gray-600 hover:bg-gray-700';
-      default:
-        return 'bg-gray-500 hover:bg-gray-600';
+  const tableOrders = new Map<number, Order>();
+  orders?.forEach((o) => {
+    if (o.status !== 'delivered' && o.status !== 'cancelled') {
+      tableOrders.set(o.table_number, o);
     }
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      free: 'Libre',
-      pending: 'Pending',
-      preparing: 'En préparation',
-      ready: 'Prêt',
-      delivered: 'Livré',
-      cancelled: 'Annulé',
-    };
-    return labels[status] || status;
-  };
+  });
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Tables</h2>
-      <div className="grid grid-cols-3 gap-3">
-        {tables.map((tableNumber) => {
-          const status = getTableStatus(tableNumber);
-          const order = getTableOrder(tableNumber);
-          const isSelected = selectedTableId === tableNumber;
-
+    <div className="p-4 h-full flex flex-col" style={{ background: 'hsl(var(--pos-sidebar))' }}>
+      <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'hsl(var(--pos-sidebar-foreground))' }}>
+        Tables
+      </h2>
+      <div className="grid grid-cols-3 gap-2 flex-1 content-start">
+        {TABLES.map((t) => {
+          const order = tableOrders.get(t);
+          const status = order?.status ?? 'free';
+          const isSelected = selectedTable === t;
           return (
             <button
-              key={tableNumber}
-              onClick={() => onTableSelect(tableNumber)}
-              className={`p-4 rounded-lg font-semibold transition-all ${getStatusColor(
-                status
-              )} ${
-                isSelected
-                  ? 'ring-4 ring-amber-400 shadow-lg'
-                  : 'shadow-md'
-              } text-white`}
+              key={t}
+              onClick={() => onSelectTable(t)}
+              className={`relative flex flex-col items-center justify-center rounded-lg border p-3 transition-all text-xs font-medium ${statusColor[status]} ${isSelected ? 'ring-2 ring-primary scale-105' : ''}`}
             >
-              <div className="text-lg">Table {tableNumber}</div>
-              <div className="text-xs mt-1 opacity-90">
-                {getStatusLabel(status)}
-              </div>
+              <Utensils className="h-4 w-4 mb-1 opacity-60" />
+              <span className="font-bold text-sm">T{t}</span>
               {order && (
-                <div className="text-xs mt-1 opacity-75">
-                  {order.items.length} article(s)
-                </div>
+                <span className="text-[10px] mt-0.5 capitalize">{order.status}</span>
               )}
             </button>
           );
@@ -89,4 +55,4 @@ export const TableGrid = ({
       </div>
     </div>
   );
-};
+}

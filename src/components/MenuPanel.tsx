@@ -1,145 +1,63 @@
 import { useState } from 'react';
-import type { Category, Product } from '@/types';
+import { useCategories } from '@/hooks/useCategories';
+import { useProducts } from '@/hooks/useProducts';
+import type { Product } from '@/types';
+import { Plus } from 'lucide-react';
 
 interface MenuPanelProps {
-  categories: Category[] | undefined;
-  products: Product[] | undefined;
-  isLoading: boolean;
-  onAddToOrder: (product: Product, quantity: number) => void;
+  onAddItem: (product: Product) => void;
 }
 
-export const MenuPanel = ({
-  categories = [],
-  products = [],
-  isLoading,
-  onAddToOrder,
-}: MenuPanelProps) => {
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
-    categories?.[0]?.id || null
-  );
-  const [quantities, setQuantities] = useState<Record<number, number>>({});
-
-  const filteredProducts = products?.filter(
-    (p) => p.category === selectedCategoryId && p.available
-  );
-
-  const handleQuantityChange = (productId: number, qty: number) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [productId]: Math.max(1, qty),
-    }));
-  };
-
-  const handleAddProduct = (product: Product) => {
-    const quantity = quantities[product.id] || 1;
-    onAddToOrder(product, quantity);
-    setQuantities((prev) => ({
-      ...prev,
-      [product.id]: 1,
-    }));
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="animate-pulse space-y-3">
-          <div className="h-8 bg-amber-900 rounded"></div>
-          <div className="h-40 bg-slate-700 rounded"></div>
-        </div>
-      </div>
-    );
-  }
+export default function MenuPanel({ onAddItem }: MenuPanelProps) {
+  const { data: categories } = useCategories();
+  const [activeCat, setActiveCat] = useState<number | undefined>();
+  const { data: products } = useProducts(activeCat ? { category: activeCat } : undefined);
 
   return (
-    <div className="space-y-4 h-full flex flex-col">
-      <h2 className="text-2xl font-bold text-white">Menu</h2>
-
-      {/* Category Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {categories?.map((cat) => (
+    <div className="flex flex-col h-full bg-background">
+      {/* Category tabs */}
+      <div className="flex gap-1 p-3 border-b border-border overflow-x-auto shrink-0">
+        <button
+          onClick={() => setActiveCat(undefined)}
+          className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${!activeCat ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+        >
+          Tout
+        </button>
+        {categories?.map((c) => (
           <button
-            key={cat.id}
-            onClick={() => {
-              setSelectedCategoryId(cat.id);
-              setQuantities({});
-            }}
-            className={`px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-all ${
-              selectedCategoryId === cat.id
-                ? 'bg-amber-500 text-gray-900'
-                : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-            }`}
+            key={c.id}
+            onClick={() => setActiveCat(c.id)}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${activeCat === c.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
           >
-            {cat.name}
+            {c.name}
           </button>
         ))}
       </div>
 
-      {/* Products Grid */}
-      <div className="flex-1 overflow-y-auto space-y-2">
-        {filteredProducts?.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">
-            Aucun plat disponible
-          </div>
-        ) : (
-          filteredProducts?.map((product) => (
-            <div
-              key={product.id}
-              className="bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition"
+      {/* Products grid */}
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+          {products?.map((p) => (
+            <button
+              key={p.id}
+              disabled={!p.available}
+              onClick={() => onAddItem(p)}
+              className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${
+                p.available
+                  ? 'bg-card border-border hover:border-primary/50 hover:shadow-sm active:scale-[0.98]'
+                  : 'bg-muted/50 border-border/50 opacity-50 cursor-not-allowed'
+              }`}
             >
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex-1">
-                  <h3 className="text-white font-medium">{product.name}</h3>
-                  <p className="text-amber-400 font-semibold text-sm">
-                    {parseFloat(product.price).toFixed(2)} €
-                  </p>
-                </div>
+              <span className="text-sm font-medium text-card-foreground leading-tight">{p.name}</span>
+              <span className="text-xs text-muted-foreground mt-0.5">{p.category_name}</span>
+              <div className="flex items-center justify-between w-full mt-2">
+                <span className="text-sm font-bold text-primary">{parseFloat(p.price).toFixed(2)} €</span>
+                {p.available && <Plus className="h-4 w-4 text-muted-foreground" />}
               </div>
-
-              <div className="flex gap-2 items-center">
-                <div className="flex items-center gap-1 bg-gray-800 rounded">
-                  <button
-                    onClick={() =>
-                      handleQuantityChange(
-                        product.id,
-                        (quantities[product.id] || 1) - 1
-                      )
-                    }
-                    className="px-2 py-1 text-gray-300 hover:text-white"
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    value={quantities[product.id] || 1}
-                    onChange={(e) =>
-                      handleQuantityChange(product.id, parseInt(e.target.value))
-                    }
-                    className="w-10 text-center bg-gray-900 text-white text-sm"
-                  />
-                  <button
-                    onClick={() =>
-                      handleQuantityChange(
-                        product.id,
-                        (quantities[product.id] || 1) + 1
-                      )
-                    }
-                    className="px-2 py-1 text-gray-300 hover:text-white"
-                  >
-                    +
-                  </button>
-                </div>
-                <button
-                  onClick={() => handleAddProduct(product)}
-                  className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium py-1 px-2 rounded transition text-sm"
-                >
-                  Ajouter
-                </button>
-              </div>
-            </div>
-          ))
-        )}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
-};
+}

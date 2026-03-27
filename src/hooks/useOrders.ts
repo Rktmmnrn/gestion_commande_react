@@ -1,66 +1,34 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
-import {
-  getOrdersAsync,
-  createOrderAsync,
-  updateOrderStatusAsync,
-  addOrderItemAsync,
-} from '@/api/orders';
-import type {
-  Order,
-  CreateOrderPayload,
-  AddOrderItemPayload,
-  OrderFilters,
-} from '@/types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getOrdersAsync, createOrderAsync, updateOrderStatusAsync, addOrderItemAsync } from '@/api/orders';
+import type { CreateOrderPayload, AddItemPayload } from '@/types';
 
-export const useOrders = (filters?: OrderFilters) => {
-  return useQuery<Order[], Error>({
+export const useOrders = (filters?: { status?: string; table_number?: number }) =>
+  useQuery({
     queryKey: ['orders', filters],
     queryFn: () => getOrdersAsync(filters),
-    refetchInterval: 2000, // Auto-refetch every 2 seconds
-    staleTime: 500, // Very short stale time for real-time updates
+    refetchInterval: 10000,
   });
-};
 
 export const useCreateOrder = () => {
-  const queryClient = useQueryClient();
-
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateOrderPayload) => createOrderAsync(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['orders'] }),
   });
 };
 
 export const useUpdateOrderStatus = () => {
-  const queryClient = useQueryClient();
-
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
-      updateOrderStatusAsync(orderId, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-    },
+    mutationFn: ({ id, status }: { id: number; status: string }) => updateOrderStatusAsync(id, status),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['orders'] }),
   });
 };
 
 export const useAddOrderItem = () => {
-  const queryClient = useQueryClient();
-
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      orderId,
-      payload,
-    }: {
-      orderId: number;
-      payload: AddOrderItemPayload;
-    }) => addOrderItemAsync(orderId, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-    },
+    mutationFn: ({ orderId, payload }: { orderId: number; payload: AddItemPayload }) => addOrderItemAsync(orderId, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['orders'] }),
   });
 };

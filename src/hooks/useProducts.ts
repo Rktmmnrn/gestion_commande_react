@@ -1,12 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { getProductsAsync } from '@/api/products';
-import type { Product, ProductFilters } from '@/types';
 
-export const useProducts = (filters?: ProductFilters) => {
-  return useQuery<Product[], Error>({
+export const useProducts = (filters?: { category?: number; available?: boolean }) =>
+  useQuery({
     queryKey: ['products', filters],
     queryFn: () => getProductsAsync(filters),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 30 * 1000,
   });
-};

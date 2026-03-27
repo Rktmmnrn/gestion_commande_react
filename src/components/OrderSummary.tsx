@@ -1,200 +1,157 @@
-import type { Order, Product } from '@/types';
+import type { Product } from '@/types';
+import { useCreateOrder, useUpdateOrderStatus, useOrders } from '@/hooks/useOrders';
+import { Trash2, Send, ChefHat, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface DisplayItem {
-  id: number;
-  product?: number;
-  product_name?: string;
-  name?: string;
+interface CartItem {
+  product: Product;
   quantity: number;
-  price: string;
-  subtotal?: number;
 }
 
 interface OrderSummaryProps {
-  order: Order | undefined;
-  tempItems: Array<Product & { quantity: number }>;
-  isCreatingOrder: boolean;
-  isUpdatingStatus: boolean;
-  onCreate: (items: Array<{ product: number; quantity: number }>) => void;
-  onAddItem: (items: Array<{ product: number; quantity: number }>) => void;
-  onStatusChange: (status: string) => void;
-  onRemoveItem: (itemId?: number) => void;
-  tableNumber: number | null;
+  selectedTable: number | null;
+  cart: CartItem[];
+  onUpdateCart: (cart: CartItem[]) => void;
 }
 
-export const OrderSummary = ({
-  order,
-  tempItems = [],
-  isCreatingOrder,
-  isUpdatingStatus,
-  onCreate,
-  onAddItem,
-  onStatusChange,
-  onRemoveItem,
-  tableNumber,
-}: OrderSummaryProps) => {
-  const displayItems: DisplayItem[] = (order?.items || []).map((item) => ({
-    id: item.id,
-    product: item.product,
-    product_name: item.product_name,
-    quantity: item.quantity,
-    price: item.price,
-    subtotal: item.subtotal,
-  }));
+const STATUS_FLOW: Record<string, { next: string; label: string; icon: React.ReactNode }> = {
+  pending: { next: 'preparing', label: 'Envoyer en cuisine', icon: <ChefHat className="h-4 w-4" /> },
+  preparing: { next: 'ready', label: 'Marquer prêt', icon: <Check className="h-4 w-4" /> },
+  ready: { next: 'delivered', label: 'Livré', icon: <Check className="h-4 w-4" /> },
+};
 
-  const tempDisplayItems: DisplayItem[] = tempItems.map((item) => ({
-    id: item.id,
-    name: item.name,
-    quantity: item.quantity,
-    price: item.price,
-  }));
+export default function OrderSummary({ selectedTable, cart, onUpdateCart }: OrderSummaryProps) {
+  const { data: orders } = useOrders();
+  const createOrder = useCreateOrder();
+  const updateStatus = useUpdateOrderStatus();
 
-  const allItems = [...displayItems, ...tempDisplayItems];
+  const activeOrder = orders?.find(
+    (o) => o.table_number === selectedTable && o.status !== 'delivered' && o.status !== 'cancelled'
+  );
 
-  const total = allItems.reduce((sum, item) => {
-    const itemPrice = typeof item.price === 'string'
-      ? parseFloat(item.price)
-      : item.price;
-    return sum + itemPrice * item.quantity;
-  }, 0);
+  const total = cart.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);
 
-  const hasChanges = tempItems.length > 0;
-  const hasOrder = !!order?.id;
-
-  const statuses = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'preparing', label: 'En préparation' },
-    { value: 'ready', label: 'Prêt' },
-    { value: 'delivered', label: 'Livré' },
-    { value: 'cancelled', label: 'Annulé' },
-  ];
-
-  const getItemName = (item: DisplayItem) => {
-    return item.product_name || item.name || 'Article';
+  const handleRemove = (productId: number) => {
+    onUpdateCart(cart.filter((i) => i.product.id !== productId));
   };
 
-  const getItemKey = (item: DisplayItem) => {
-    return item.product ? `product-${item.product}` : `id-${item.id}`;
+  const handleQuantity = (productId: number, delta: number) => {
+    onUpdateCart(
+      cart
+        .map((i) => (i.product.id === productId ? { ...i, quantity: i.quantity + delta } : i))
+        .filter((i) => i.quantity > 0)
+    );
+  };
+
+  const handleSubmit = () => {
+    if (!selectedTable || cart.length === 0) return;
+    createOrder.mutate(
+      { table_number: selectedTable, items: cart.map((i) => ({ product: i.product.id, quantity: i.quantity })) },
+      {
+        onSuccess: () => {
+          toast.success('Commande créée');
+          onUpdateCart([]);
+        },
+        onError: () => toast.error('Erreur lors de la création'),
+      }
+    );
+  };
+
+  const handleStatusChange = () => {
+    if (!activeOrder) return;
+    const flow = STATUS_FLOW[activeOrder.status];
+    if (!flow) return;
+    updateStatus.mutate(
+      { id: activeOrder.id, status: flow.next },
+      {
+        onSuccess: () => toast.success(`Statut → ${flow.next}`),
+        onError: () => toast.error('Erreur'),
+      }
+    );
   };
 
   return (
-    <div className="space-y-4 h-full flex flex-col">
-      <h2 className="text-2xl font-bold text-white">
-        {tableNumber
-          ? `Commande - Table ${tableNumber}`
-          : 'Sélectionnez une table'}
-      </h2>
+    <div className="flex flex-col h-full bg-card border-l border-border">
+      <div className="p-4 border-b border-border">
+        <h2 className="text-sm font-semibold text-foreground">
+          {selectedTable ? `Table ${selectedTable}` : 'Sélectionnez une table'}
+        </h2>
+        {activeOrder && (
+          <span className="text-xs text-primary capitalize font-medium">
+            Commande #{activeOrder.id} — {activeOrder.status}
+          </span>
+        )}
+      </div>
 
-      {!tableNumber && (
-        <div className="bg-gray-700 p-4 rounded-lg text-center text-gray-300">
-          Aucune table sélectionnée
+      {activeOrder && activeOrder.items.length > 0 && (
+        <div className="px-4 py-2 border-b border-border bg-muted/30">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">En cours</p>
+          {activeOrder.items.map((item) => (
+            <div key={item.id} className="flex justify-between text-xs py-0.5 text-foreground">
+              <span>{item.quantity}× {item.product_name}</span>
+              <span>{item.subtotal.toFixed(2)} €</span>
+            </div>
+          ))}
+          <div className="flex justify-between text-xs font-bold mt-1 pt-1 border-t border-border text-foreground">
+            <span>Total commande</span>
+            <span>{activeOrder.total.toFixed(2)} €</span>
+          </div>
         </div>
       )}
 
-      {tableNumber && (
-        <>
-          {/* Items List */}
-          <div className="flex-1 overflow-y-auto space-y-2 bg-gray-900 rounded-lg p-3">
-            {allItems.length === 0 ? (
-              <div className="text-center text-gray-400 py-8">
-                Aucun article
-              </div>
-            ) : (
-              allItems.map((item, index) => (
-                <div
-                  key={`${getItemKey(item)}-${index}`}
-                  className="flex justify-between items-center bg-gray-800 p-2 rounded"
-                >
-                  <div className="flex-1">
-                    <p className="text-white text-sm">{getItemName(item)}</p>
-                    <p className="text-xs text-gray-400">
-                      {item.quantity}x @{parseFloat(item.price).toFixed(2)} €
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-amber-400 font-semibold text-sm">
-                      {(
-                        parseFloat(item.price) * item.quantity
-                      ).toFixed(2)}{' '}
-                      €
-                    </p>
-                    {tableNumber && (
-                      <button
-                        onClick={() => onRemoveItem(item.id)}
-                        className="text-xs text-red-400 hover:text-red-300 mt-1"
-                      >
-                        Supprimer
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Total */}
-          <div className="bg-gray-900 p-4 rounded-lg border-2 border-amber-500">
-            <div className="flex justify-between items-center">
-              <span className="text-white font-semibold text-lg">Total:</span>
-              <span className="text-amber-400 font-bold text-2xl">
-                {total.toFixed(2)} €
-              </span>
-            </div>
-          </div>
-
-          {/* Status Section */}
-          {hasOrder && (
-            <div className="space-y-2">
-              <label className="text-white text-sm font-medium">Statut</label>
-              <select
-                value={order?.status || 'pending'}
-                onChange={(e) => onStatusChange(e.target.value)}
-                disabled={isUpdatingStatus}
-                className="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 hover:border-amber-500 disabled:opacity-50"
-              >
-                {statuses.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Action Buttons */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {cart.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center mt-8">Ajoutez des plats depuis le menu</p>
+        ) : (
           <div className="space-y-2">
-            {!hasOrder ? (
-              <button
-                onClick={() => {
-                  const itemsToCreate = tempItems.map((item) => ({
-                    product: item.id,
-                    quantity: item.quantity,
-                  }));
-                  onCreate(itemsToCreate);
-                }}
-                disabled={tempItems.length === 0 || isCreatingOrder}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition"
-              >
-                {isCreatingOrder ? 'Création...' : 'Créer la commande'}
-              </button>
-            ) : hasChanges ? (
-              <button
-                onClick={() => {
-                  const itemsToAdd = tempItems.map((item) => ({
-                    product: item.id,
-                    quantity: item.quantity,
-                  }));
-                  onAddItem(itemsToAdd);
-                }}
-                disabled={isCreatingOrder}
-                className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition"
-              >
-                {isCreatingOrder ? 'Ajout...' : 'Ajouter les articles'}
-              </button>
-            ) : null}
+            {cart.map((item) => (
+              <div key={item.product.id} className="flex items-center justify-between bg-secondary/50 rounded-lg p-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{item.product.name}</p>
+                  <p className="text-xs text-muted-foreground">{parseFloat(item.product.price).toFixed(2)} €</p>
+                </div>
+                <div className="flex items-center gap-1 ml-2">
+                  <button onClick={() => handleQuantity(item.product.id, -1)} className="w-6 h-6 rounded bg-muted flex items-center justify-center text-foreground text-xs font-bold hover:bg-muted/80">−</button>
+                  <span className="w-6 text-center text-sm font-medium text-foreground">{item.quantity}</span>
+                  <button onClick={() => handleQuantity(item.product.id, 1)} className="w-6 h-6 rounded bg-muted flex items-center justify-center text-foreground text-xs font-bold hover:bg-muted/80">+</button>
+                  <button onClick={() => handleRemove(item.product.id)} className="w-6 h-6 rounded bg-destructive/10 flex items-center justify-center text-destructive ml-1 hover:bg-destructive/20">
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        </>
-      )}
+        )}
+      </div>
+
+      <div className="p-4 border-t border-border space-y-2">
+        {cart.length > 0 && (
+          <>
+            <div className="flex justify-between text-sm font-bold text-foreground">
+              <span>Nouveau total</span>
+              <span>{total.toFixed(2)} €</span>
+            </div>
+            <button
+              onClick={handleSubmit}
+              disabled={!selectedTable || createOrder.isPending}
+              className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              <Send className="h-4 w-4" />
+              {createOrder.isPending ? 'Envoi...' : 'Envoyer la commande'}
+            </button>
+          </>
+        )}
+        {activeOrder && STATUS_FLOW[activeOrder.status] && (
+          <button
+            onClick={handleStatusChange}
+            disabled={updateStatus.isPending}
+            className="w-full py-2 rounded-lg border border-primary text-primary font-medium text-sm flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors disabled:opacity-50"
+          >
+            {STATUS_FLOW[activeOrder.status].icon}
+            {STATUS_FLOW[activeOrder.status].label}
+          </button>
+        )}
+      </div>
     </div>
   );
-};
+}

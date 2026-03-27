@@ -1,10 +1,8 @@
-/* Categories */
 export interface Category {
   id: number;
   name: string;
 }
 
-/* Products */
 export interface Product {
   id: number;
   name: string;
@@ -14,7 +12,6 @@ export interface Product {
   available: boolean;
 }
 
-/* Order Items */
 export interface OrderItem {
   id: number;
   product: number;
@@ -24,7 +21,6 @@ export interface OrderItem {
   subtotal: number;
 }
 
-/* Orders */
 export interface Order {
   id: number;
   table_number: number;
@@ -35,31 +31,12 @@ export interface Order {
   updated_at: string;
 }
 
-/* Request / Mutation Payloads */
 export interface CreateOrderPayload {
   table_number: number;
-  items: {
-    product: number;
-    quantity: number;
-  }[];
+  items: { product: number; quantity: number }[];
 }
 
-export interface UpdateOrderStatusPayload {
-  status: string;
-}
-
-export interface AddOrderItemPayload {
+export interface AddItemPayload {
   product: number;
   quantity: number;
-}
-
-/* API Filter Options */
-export interface ProductFilters {
-  category?: number;
-  available?: boolean;
-}
-
-export interface OrderFilters {
-  status?: string;
-  table_number?: number;
 }
