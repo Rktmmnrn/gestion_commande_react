@@ -33,6 +33,10 @@ export interface Order {
   updated_at: string;
 }
 
+export const isValidOrderStatus = (status: string): status is OrderStatus => {
+  return ['pending', 'preparing', 'ready', 'delivered', 'cancelled'].includes(status);
+};
+
 export interface CreateOrderPayload {
   table_number: number;
   items: { product: number; quantity: number }[];

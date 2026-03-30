@@ -42,6 +42,8 @@ export default function TableGrid({ selectedTable, onSelectTable }: TableGridPro
             <button
               key={t}
               onClick={() => onSelectTable(t)}
+              aria-label={`Table ${t}${order ? ` - ${order.status}`: '- libre'}`}
+              aria-pressed={isSelected}
               // style={{backgroundColor: 'red'}}
               className={`relative flex flex-col items-center justify-center rounded-lg border p-3 transition-all text-xs font-medium ${statusColor[status]} ${isSelected ? 'ring-2 ring-primary scale-105' : ''}`}
             >
