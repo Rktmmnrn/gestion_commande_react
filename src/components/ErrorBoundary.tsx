@@ -27,10 +27,10 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-destructive">Une erreur est survenue</h2>
-            <p className="mt-2 text-muted-foreground">{this.state.error?.message}</p>
+            <p className="mt-2 text-muted-foreground">{this.state.error?.message || "Erreur inattendue"}</p>
             <button
               onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded"
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               Recharger
             </button>

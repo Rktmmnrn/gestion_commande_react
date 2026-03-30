@@ -85,7 +85,7 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
         )}
       </div>
 
-      {activeOrder && activeOrder.items.length > 0 && (
+      {activeOrder?.items?.length > 0 && (
         <div className="px-4 py-2 border-b border-border bg-muted/30">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">En cours</p>
           {activeOrder.items.map((item) => (
