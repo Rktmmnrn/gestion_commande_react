@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
+// import { LoadingSpinner } from './LoadingSpinner';
 import type { Product } from '@/types';
 import { Plus } from 'lucide-react';
 
@@ -12,6 +13,8 @@ export default function MenuPanel({ onAddItem }: MenuPanelProps) {
   const { data: categories } = useCategories();
   const [activeCat, setActiveCat] = useState<number | undefined>();
   const { data: products } = useProducts(activeCat ? { category: activeCat } : undefined);
+
+  // if (isLoading) return <LoadingSpinner />
 
   return (
     <div className="flex flex-col h-full bg-background">

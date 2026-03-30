@@ -21,10 +21,12 @@ export interface OrderItem {
   subtotal: number;
 }
 
+export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+
 export interface Order {
   id: number;
   table_number: number;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+  status: OrderStatus;
   items: OrderItem[];
   total: number;
   created_at: string;
