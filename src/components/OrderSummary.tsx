@@ -12,6 +12,7 @@ interface OrderSummaryProps {
   selectedTable: number | null;
   cart: CartItem[];
   onUpdateCart: (cart: CartItem[]) => void;
+  onClearCart?: () => void;
 }
 
 const STATUS_FLOW: Record<string, { next: string; label: string; icon: React.ReactNode }> = {
@@ -20,7 +21,7 @@ const STATUS_FLOW: Record<string, { next: string; label: string; icon: React.Rea
   ready: { next: 'delivered', label: 'Livré', icon: <Check className="h-4 w-4" /> },
 };
 
-export default function OrderSummary({ selectedTable, cart, onUpdateCart }: OrderSummaryProps) {
+export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClearCart }: OrderSummaryProps) {
   const { data: orders } = useOrders();
   const createOrder = useCreateOrder();
   const updateStatus = useUpdateOrderStatus();
@@ -51,6 +52,7 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart }: Orde
         onSuccess: () => {
           toast.success('Commande créée');
           onUpdateCart([]);
+          onClearCart?.();
         },
         onError: () => toast.error('Erreur lors de la création'),
       }

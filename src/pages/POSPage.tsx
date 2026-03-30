@@ -3,6 +3,7 @@ import TableGrid from '@/components/TableGrid';
 import MenuPanel from '@/components/MenuPanel';
 import OrderSummary from '@/components/OrderSummary';
 import type { Product } from '@/types';
+import { toast } from 'sonner'
 
 interface CartItem {
   product: Product;
@@ -17,17 +18,27 @@ export default function POSPage() {
     setCart((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
-        return prev.map((i) => (i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
+        return prev.map((i) => (
+          i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+        ));
       }
       return [...prev, { product, quantity: 1 }];
     });
+    toast.success(`${product.name} ajouté au panier`);
+  }, []);
+
+  const handleClearCart = useCallback(() => {
+    setCart([]);
   }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Left: Tables sidebar */}
       <aside className="w-56 shrink-0 overflow-y-auto">
-        <TableGrid selectedTable={selectedTable} onSelectTable={setSelectedTable} />
+        <TableGrid
+        selectedTable={selectedTable}
+        onSelectTable={setSelectedTable}
+        />
       </aside>
 
       {/* Center: Menu */}
@@ -37,7 +48,12 @@ export default function POSPage() {
 
       {/* Right: Order summary */}
       <aside className="w-80 shrink-0 overflow-hidden">
-        <OrderSummary selectedTable={selectedTable} cart={cart} onUpdateCart={setCart} />
+        <OrderSummary
+        selectedTable={selectedTable}
+        cart={cart}
+        onUpdateCart={setCart}
+        onClearCart={handleClearCart}
+        />
       </aside>
     </div>
   );
