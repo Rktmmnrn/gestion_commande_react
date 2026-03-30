@@ -6,7 +6,10 @@ export const useOrders = (filters?: { status?: string; table_number?: number }) 
   useQuery({
     queryKey: ['orders', filters],
     queryFn: () => getOrdersAsync(filters),
-    refetchInterval: 10000,
+    refetchInterval: 30000,
+    staleTime: 15000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
 export const useCreateOrder = () => {
