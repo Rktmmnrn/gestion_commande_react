@@ -42,6 +42,7 @@ export default function TableGrid({ selectedTable, onSelectTable }: TableGridPro
             <button
               key={t}
               onClick={() => onSelectTable(t)}
+              // style={{backgroundColor: 'red'}}
               className={`relative flex flex-col items-center justify-center rounded-lg border p-3 transition-all text-xs font-medium ${statusColor[status]} ${isSelected ? 'ring-2 ring-primary scale-105' : ''}`}
             >
               <Utensils className="h-4 w-4 mb-1 opacity-60" />
