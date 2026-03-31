@@ -22,7 +22,7 @@ const STATUS_FLOW: Record<string, { next: string; label: string; icon: React.Rea
 };
 
 export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClearCart }: OrderSummaryProps) {
-  const { data: orders } = useOrders();
+  const { data: orders, isLoading: ordersLoading } = useOrders();
   const createOrder = useCreateOrder();
   const updateStatus = useUpdateOrderStatus();
 
@@ -72,6 +72,21 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
     );
   };
 
+  if (ordersLoading) { // état de chargement
+    return (
+      <div className="flex flex-col h-full bg-card border-l border-border">
+        <div className="p-4 border-b border-border">
+          <h2 className="text-sm font-semibold text-foreground">
+            {selectedTable ? `Table ${selectedTable}` : 'Sélectionnez une table'}
+          </h2>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full bg-card border-l border-border">
       <div className="p-4 border-b border-border">
@@ -85,12 +100,12 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
         )}
       </div>
 
-      {activeOrder?.items?.length > 0 && (
+      {activeOrder && activeOrder.items && activeOrder.items.length > 0 && ( // vérif que activeOrder et activeOrder..items existent
         <div className="px-4 py-2 border-b border-border bg-muted/30">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">En cours</p>
           {activeOrder.items.map((item) => (
             <div key={item.id} className="flex justify-between text-xs py-0.5 text-foreground">
-              <span>{item.quantity}× {item.product_name}</span>
+              <span>{item.quantity}x {item.product_name}</span>
               <span>{item.subtotal.toFixed(2)} €</span>
             </div>
           ))}
