@@ -14,7 +14,10 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner
+          position="bottom-center"
+          closeButton
+        /> {/** message popup */}
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
