@@ -37,7 +37,7 @@ export default function POSPage() {
   return (
     <>
       {isOffline && (
-        <div className="fixed top-0 left-0 right-0 bg-destructive text-destructive-foreground py-2 px-4 flex items-center justify-center gap-2 z-50">
+        <div className="top-0 left-0 right-0 bg-destructive text-destructive-foreground py-2 px-4 flex items-center justify-center gap-2 z-50 bg-slate-300">
           <WifiOff className="h-4 w-4" />
           <span className="text-sm font-medium">
             Mode hors-ligne - Les modifications seront synchronisées automatiquement
