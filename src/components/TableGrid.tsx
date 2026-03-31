@@ -15,18 +15,47 @@ const statusColor: Record<string, string> = {
   preparing: 'bg-blue-500/20 border-blue-500/50 text-blue-300',
   ready: 'bg-green-500/20 border-green-500/50 text-green-300',
   delivered: 'bg-muted/30 border-border text-muted-foreground',
-  free: 'bg-card/60 border-border text-muted-foreground hover:border-primary/50',
+  free: 'bg-card border-border text-white hover:border-primary',
 };
 
 export default function TableGrid({ selectedTable, onSelectTable }: TableGridProps) {
-  const { data: orders } = useOrders();
+  const { data: orders, isLoading, error } = useOrders();
 
   const tableOrders = new Map<number, Order>();
-  orders?.forEach((o) => {
-    if (o.status !== 'delivered' && o.status !== 'cancelled') {
-      tableOrders.set(o.table_number, o);
-    }
-  });
+
+  if (Array.isArray(orders)) {
+    orders.forEach((o) => {
+      if (o.status !== 'delivered' && o.status !== 'cancelled') {
+        tableOrders.set(o.table_number, o);
+      }
+    });
+  }
+
+  if (isLoading) { // etat de chargement
+    return (
+      <div className="p-4 h-full flex flex-col" style={{ background: 'hsl(var(--pos-sidebar))' }}>
+        <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'hsl(var(--pos-sidebar-foreground))' }}>
+          Tables
+        </h2>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) { // etat d'erreur
+    return (
+      <div className="p-4 h-full flex flex-col" style={{ background: 'hsl(var(--pos-sidebar))' }}>
+        <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'hsl(var(--pos-sidebar-foreground))' }}>
+          Tables
+        </h2>
+        <div className="text-red-400 text-xs text-center">
+          Erreur de chargement des commandes
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 h-full flex flex-col" style={{ background: 'hsl(var(--pos-sidebar))' }}>
@@ -45,7 +74,9 @@ export default function TableGrid({ selectedTable, onSelectTable }: TableGridPro
               aria-label={`Table ${t}${order ? ` - ${order.status}`: '- libre'}`}
               aria-pressed={isSelected}
               // style={{backgroundColor: 'red'}}
-              className={`relative flex flex-col items-center justify-center rounded-lg border p-3 transition-all text-xs font-medium ${statusColor[status]} ${isSelected ? 'ring-2 ring-primary scale-105' : ''}`}
+              className={`relative flex flex-col items-center justify-center rounded-lg border p-3 transition-all text-xs font-medium
+                ${statusColor[status]}
+                ${isSelected ? 'ring-2 ring-primary scale-105' : ''}`}
             >
               <Utensils className="h-4 w-4 mb-1 opacity-60" />
               <span className="font-bold text-sm">T{t}</span>

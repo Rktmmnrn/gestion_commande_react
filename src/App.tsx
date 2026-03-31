@@ -13,7 +13,7 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
+        {/* <Toaster /> */}
         <Sonner
           position="bottom-center"
           closeButton
