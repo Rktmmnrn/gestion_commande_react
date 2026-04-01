@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { config } from 'process';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/',
@@ -8,7 +7,7 @@ const apiClient = axios.create({
     'Accept': 'application/json' // pour le debug
   },
   timeout: 10000,
-  withCredentials: true, // cookies/sessions
+  // withCredentials: true, // cookies/sessions
 });
 
 // intercepteur pour debug
