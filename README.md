@@ -1,46 +1,76 @@
-# Gestion de Commandes - Application React
+# Gestion de Commandes - Application React (POS)
 
-Une application web moderne de gestion de commandes (Point of Sale) construite avec React, TypeScript, Vite et shadcn/ui.
+Une application web moderne de gestion de commandes (Point of Sale) construite avec React 19, TypeScript, Vite et shadcn/ui. Application complète pour la gestion des commandes avec support du mode hors-ligne.
+
+## 📑 Table des matières
+
+1. [Vue d'ensemble](#-vue-densemble)
+2. [Stack Technologique](#-stack-technologique)
+3. [Installation & Démarrage Rapide](#-installation--démarrage-rapide)
+4. [Commandes Disponibles](#-commandes-disponibles)
+5. [Structure du Projet](#-structure-du-projet)
+6. [Modèles de Données](#--modèles-de-données)
+7. [Fonctionnalités Principales](#-fonctionnalités-principales)
+8. [Design System](#-design-system)
+9. [Composants Principaux](#-composants-principaux)
+10. [Hooks Personnalisés](#-hooks-personnalisés)
+11. [Tests](#-tests)
+12. [Contribution](#-contribution)
+13. [Dépendances Clés](#--dépendances-clés)
+14. [Linting](#-linting)
+15. [Déploiement](#-déploiement)
+16. [Conventions de Code](#--conventions-de-code)
+17. [Dépannage](#-troubleshooting)
+18. [Ressources](#-ressources)
+19. [Licence](#--licence)
 
 ## 🎯 Vue d'ensemble
 
 Cette application permet de :
 - **Visualiser les catégories** de produits disponibles
-- **Consulter les produits** avec leurs détails et prix
-- **Gérer les commandes** en temps réel
-- **Suivre l'état des commandes** (en attente, en livraison, livrée)
-- **Interface utilisateur responsive** et accessible
+- **Consulter les produits** avec leurs détails, prix et disponibilité
+- **Gérer un panier d'articles** avec quantités
+- **Créer et modifier les commandes** en temps réel
+- **Suivre l'état des commandes** (pending, preparing, ready, delivered, cancelled)
+- **Mode hors-ligne** avec détection automatique de la connexion
+- **Interface utilisateur responsive** et accessible avec composants modernes
+- **Gestion des tables** pour les commandes (numéro de table)
 
 ## 🛠️ Stack Technologique
 
 ### Frontend
-- **React 19** - Bibliothèque UI
-- **TypeScript** - Typage statique
-- **Vite** - Bundler et serveur de développement
+- **React 19** - Bibliothèque UI moderne
+- **TypeScript** - Typage statique complet
+- **Vite** - Bundler ultra-rapide et serveur de développement
 - **React Router** - Routage client-side
-- **React Query** - Gestion du cache et des requêtes API
+- **React Query (@tanstack/react-query)** - Gestion du cache et des requêtes API
+- **React Hook Form** - Gestion des formulaires
 - **TailwindCSS** - Framework CSS utilitaire
-- **shadcn/ui** - Composants UI réutilisables
+- **shadcn/ui** - Composants UI réutilisables et accessibles
+- **Sonner** - Notifications toast élégantes
+- **Lucide React** - Icônes SVG performantes
 
-### Outils de Développement
-- **ESLint** - Linting du code
-- **Vitest** - Framework de test unitaire
-- **TypeScript** - Vérification des types
+### Outils de Développement & QA
+- **ESLint** - Linting et qualité du code
+- **Vitest** - Framework de test unitaire haute performance
+- **Playwright** - Tests end-to-end
+- **PostCSS** - Transformations CSS
 
-### API
+### Connexion API
 - **Axios** - Client HTTP avec intercepteurs
 - **Endpoint API** : `http://localhost:8000/api/`
+- Support du **mode hors-ligne** avec détection automatique
 
-## 📦 Installation
+## 📦 Installation & Démarrage Rapide
 
 ### Prérequis
 - **Node.js** >= 18
 - **npm** ou **yarn**
 - **Serveur API** accessible sur `http://localhost:8000/api/`
 
-### Étapes d'installation
+### Installation
 
-1. **Cloner le projet** (si nécessaire)
+1. **Cloner le projet**
    ```bash
    git clone <url-du-repo>
    cd react_gestion_commande
@@ -55,7 +85,15 @@ Cette application permet de :
    ```bash
    npm run dev
    ```
-   L'application sera accessible sur `http://localhost:5173`
+   L'application sera accessible sur **http://localhost:5173**
+
+4. **Vérifier la connexion API**
+   - Assurez-vous que l'API est disponible sur `http://localhost:8000/api/`
+   - L'application affichera une alerte si la connexion échoue
+
+### Accès à l'Application
+- **Développement** : http://localhost:5173
+- **Production** : À déployer selon votre configuration
 
 ## 🚀 Commandes Disponibles
 
@@ -86,100 +124,278 @@ npm run test:watch
 
 ```
 src/
-├── api/                    # Clients API
-│   ├── client.ts          # Configuration Axios
-│   ├── categories.ts      # API des catégories
-│   ├── orders.ts          # API des commandes
-│   └── products.ts        # API des produits
-├── components/            # Composants React
-│   ├── ui/               # Composants shadcn/ui
-│   ├── MenuPanel.tsx     # Panneau de sélection des catégories
-│   ├── TableGrid.tsx     # Grille des commandes
-│   ├── OrderSummary.tsx  # Résumé de la commande
-│   └── NavLink.tsx       # Lien de navigation
-├── hooks/                 # Custom hooks
-│   ├── useCategories.ts  # Hook pour les catégories
-│   ├── useOrders.ts      # Hook pour les commandes
-│   └── useProducts.ts    # Hook pour les produits
-├── pages/                 # Pages principales
-│   ├── Index.tsx         # Page d'accueil
-│   ├── POSPage.tsx       # Page POS (Point of Sale)
-│   └── NotFound.tsx      # Page 404
-├── types/                 # Définitions TypeScript
-├── lib/                   # Utilitaires
-├── App.tsx               # Composant racine
-├── main.tsx              # Point d'entrée
-└── index.css             # Styles Tailwind globaux
+├── api/                           # Clients API
+│   ├── client.ts                 # Configuration Axios avec intercepteurs
+│   ├── categories.ts             # API des catégories
+│   ├── orders.ts                 # API des commandes
+│   └── products.ts               # API des produits
+├── components/                    # Composants React
+│   ├── ui/                       # Composants shadcn/ui (30+)
+│   ├── MenuPanel.tsx             # Panneau de sélection des catégories
+│   ├── TableGrid.tsx             # Grille des commandes par table
+│   ├── OrderSummary.tsx          # Résumé et détails de la commande
+│   ├── NavLink.tsx               # Lien de navigation
+│   ├── ErrorBoundary.tsx         # Gestion des erreurs
+│   ├── ErrorMessage.tsx          # Affichage des messages d'erreur
+│   └── LoadingSpinner.tsx        # Indicateur de chargement
+├── hooks/                         # Custom hooks React
+│   ├── index.ts                  # Exports des hooks
+│   ├── useCategories.ts          # Récupération des catégories
+│   ├── useOrders.ts              # Récupération et modification des commandes
+│   ├── useProducts.ts            # Récupération des produits
+│   ├── useOfflineMode.ts         # Détection du mode hors-ligne
+│   └── use-toast.ts              # Hook pour les notifications
+├── pages/                         # Pages principales
+│   ├── Index.tsx                 # Page d'accueil (route /)
+│   ├── POSPage.tsx               # Page POS (Point of Sale) - interface principale
+│   └── NotFound.tsx              # Page 404
+├── types/                         # Définitions TypeScript
+│   └── index.ts                  # Types et interfaces (Category, Product, Order, etc.)
+├── lib/                           # Utilitaires
+│   └── utils.ts                  # Fonctions utilitaires
+├── test/                          # Tests
+│   ├── example.test.ts           # Exemple de test
+│   └── setup.ts                  # Configuration des tests
+├── App.tsx                        # Composant racine avec routing
+├── main.tsx                       # Point d'entrée React
+└── index.css                      # Styles Tailwind globaux et variables CSS
 ```
 
-## 🔌 API Integration
+## � Modèles de Données
+
+### Category
+```typescript
+interface Category {
+  id: number;
+  name: string;
+}
+```
+
+### Product
+```typescript
+interface Product {
+  id: number;
+  name: string;
+  price: string;
+  category: number;
+  category_name: string;
+  available: boolean;
+}
+```
+
+### OrderItem
+```typescript
+interface OrderItem {
+  id: number;
+  product: number;
+  product_name: string;
+  quantity: number;
+  price: string;
+  subtotal: number;
+}
+```
+
+### Order
+```typescript
+interface Order {
+  id: number;
+  table_number: number;
+  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+  items: OrderItem[];
+  // ... autres champs
+}
+```
+
+### États des Commandes
+- **pending** - Commande en attente de traitement
+- **preparing** - Commande en préparation
+- **ready** - Commande prête
+- **delivered** - Commande livrée
+- **cancelled** - Commande annulée
+
+## 🔌 Intégration API
 
 ### Configuration
 
-L'application utilise Axios pour communiquer avec une API REST :
+L'application utilise **Axios** pour communiquer avec une API REST :
 
 **Base URL** : `http://localhost:8000/api/`
 
-**Configuration** : Voir `src/api/client.ts`
+**Configuration** : Voir [src/api/client.ts](src/api/client.ts)
 
-### Endpoints utilisés
+### Endpoints disponibles
 
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
 | GET | `/categories` | Récupère toutes les catégories |
 | GET | `/products` | Récupère tous les produits |
-| GET | `/products?category=ID` | Produits d'une catégorie |
+| GET | `/products?category=ID` | Récupère les produits d'une catégorie |
 | GET | `/orders` | Récupère toutes les commandes |
 | POST | `/orders` | Crée une nouvelle commande |
-| GET | `/orders/ID` | Détails d'une commande |
-| PUT | `/orders/ID` | Modifie une commande |
+| GET | `/orders/ID` | Récupère les détails d'une commande |
+| PUT | `/orders/ID` | Modifie une commande existante |
+| DELETE | `/orders/ID` | Annule une commande |
+
+### Intercepteurs Axios
+
+Les intercepteurs sont configurés pour :
+- Gérer les erreurs globales
+- Ajouter des headers d'authentification si nécessaire
+- Formatter les requêtes et réponses
+
+## 🌐 Fonctionnalités Principales
+
+### Mode Hors-Ligne
+- **Détection automatique** de la perte de connexion internet
+- **Notifications toast** pour informer l'utilisateur de l'état de connexion
+- **Gestion gracieuse** des erreurs réseau
+- Implémentation : [src/hooks/useOfflineMode.ts](src/hooks/useOfflineMode.ts)
+
+### Gestion du Panier
+- **Ajout/Suppression** d'articles
+- **Modification des quantités**
+- **Calcul automatique** du sous-total et total
+- **Panier persistant** durant la session
+
+### Gestion des Commandes
+- **Création** de nouvelles commandes par table
+- **Ajout** d'articles aux commandes
+- **Suivi du statut** en temps réel
+- **Historique** des commandes
 
 ## 🎨 Design System
 
-### Couleurs (CSS Variables)
+### Nombre de Composants
+- **30+ composants UI** de shadcn/ui incluant :
+  - Accordions, Alertes, Avatars, Badges
+  - Boutons, Calendriers, Cartes, Carrousels
+  - Checkboxes, Dialogues, Menus déroulants
+  - Formulaires, Onglets, Sélecteurs, Sliders
+  - Toasts, Tooltips, etc.
 
-Les couleurs sont définies en HSL dans `src/index.css` :
+### Thème & Couleurs (CSS Variables)
+
+Les couleurs sont définies en **HSL** dans [src/index.css](src/index.css) :
 
 ```css
 --background: 220 20% 97%     /* Fond principal */
 --foreground: 220 20% 10%     /* Texte principal */
 --primary: 36 90% 45%         /* Couleur primaire */
+--secondary: 260 60% 50%      /* Couleur secondaire */
+--destructive: 0 100% 50%     /* Actions destructives */
 --border: 220 15% 88%         /* Bordures */
---card: 0 0% 100%            /* Cartes */
+--card: 0 0% 100%             /* Cartes */
+--muted: 220 10% 60%          /* Texte atténué */
 ```
 
-### Mode sombre
+### Support du Mode Sombre
+Support du thème sombre via la classe `.dark` sur l'élément racine.
 
-Supporter le mode sombre en ajoutant la classe `.dark` à l'élément racine.
+### Responsive Design
+L'application est **100% responsive** et s'adapte à tous les écrans :
+- Mobile (320px+)
+- Tablette (768px+)
+- Desktop (1024px+)
 
 ## 📱 Composants Principaux
 
 ### MenuPanel
-Affiche les catégories de produits accessibles via clic.
+Panneau de navigation affichant les catégories de produits.
+- Navigation interactive entre les catégories
+- Affichage dynamique des produits par catégorie
+- Sélection fluide et responsive
+
+**Localisation** : [src/components/MenuPanel.tsx](src/components/MenuPanel.tsx)
 
 ### TableGrid
-Tableau affichant toutes les commandes avec statut de livraison.
+Tableau affichant les commandes en cours classées par table.
+- Vue en grille des commandes
+- Statuts visuels avec badges
+- Gestion des commandes par table
+
+**Localisation** : [src/components/TableGrid.tsx](src/components/TableGrid.tsx)
 
 ### OrderSummary
-Panneau latéral avec résumé de la commande en cours.
+Panneau latéral avec résumé et détails de la commande en cours.
+- Affichage des articles du panier
+- Calcul du total (TTC)
+- Actions (ajouter, retirer articles)
+- Validation et envoi de commande
 
-### Hooks personnalisés
+**Localisation** : [src/components/OrderSummary.tsx](src/components/OrderSummary.tsx)
+
+### ErrorBoundary & ErrorMessage
+Gestion complète des erreurs :
+- **ErrorBoundary** : Capture les erreurs React
+- **ErrorMessage** : Affiche les messages d'erreur utilisateur
+- **LoadingSpinner** : Indicateur de chargement
+
+**Localisations** : 
+- [src/components/ErrorBoundary.tsx](src/components/ErrorBoundary.tsx)
+- [src/components/ErrorMessage.tsx](src/components/ErrorMessage.tsx)
+
+## 🪝 Hooks Personnalisés
 
 - **`useCategories()`** - Récupère et met en cache les catégories
 - **`useProducts(categoryId?)`** - Récupère les produits (filtrés par catégorie optionnellement)
 - **`useOrders()`** - Récupère les commandes avec polling
+- **`useCreateOrder()`** - Crée une nouvelle commande
+- **`useUpdateOrderStatus()`** - Met à jour le statut d'une commande
+- **`useAddOrderItem()`** - Ajoute un article à une commande
+- **`useOfflineMode()`** - Détecte l'état de connexion internet
 
 ## 🧪 Tests
 
+### Exécution des tests
+
 ```bash
-# Exécuter tous les tests
+# Exécuter tous les tests une fois
 npm run test
 
-# Mode watcher
+# Mode watcher (surveillance des changements)
 npm run test:watch
 ```
 
-Les tests unitaires sont situés dans `src/test/`
+**À propos** : Les tests unitaires sont situés dans [src/test/](src/test/)
+
+### Couverture de test
+- Tests unitaires avec **Vitest**
+- Tests d'intégration
+- Configuration : [vitest.config.ts](vitest.config.ts)
+
+### Tests end-to-end
+- Framework : **Playwright**
+- Configuration : [playwright.config.ts](playwright.config.ts)
+- Fixtures : [playwright-fixture.ts](playwright-fixture.ts)
+
+## 👥 Contribution
+
+Les contributions sont bienvenues! Pour contribuer :
+
+1. Forker le projet
+2. Créer une branche (`git checkout -b feature/AmazingFeature`)
+3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+Assurez-vous que :
+- ✅ Le code passe le lint (`npm run lint`)
+- ✅ Les tests passent (`npm run test`)
+- ✅ TypeScript compile sans erreur
+
+## 📝 Dépendances Clés
+
+| Package | Version | Use Case |
+|---------|---------|----------|
+| react | 19.x | Librarie UI |
+| typescript | 5.x | Typage statique |
+| @tanstack/react-query | 5.x | Gestion du cache API |
+| axios | 1.x | Client HTTP |
+| tailwindcss | 4.x | Framework CSS |
+| sonner | Latest | Notifications |
+| vite | 6.x | Bundler |
+
+Pour voir la liste complète, consultez [package.json](package.json)
 
 ## 🔍 Linting
 
@@ -225,14 +441,94 @@ const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
 ### Erreur de connexion API
 
-- Vérifier que le serveur API est lancé sur `http://localhost:8000`
-- Vérifier les logs du navigateur (F12 > Console)
-- Vérifier que CORS est configuré correctement sur l'API
+**Symptôme** : Messages d'erreur API, le panier ne se charge pas
 
-### Erreurs Tailwind
+**Solutions** :
+1. Vérifier que le serveur API est lancé sur `http://localhost:8000`
+2. Vérifier les logs du navigateur (F12 > Console)
+3. Vérifier que CORS est configuré correctement sur l'API backend
+4. Relancer le serveur frontend : `npm run dev`
 
-- Nettoyer le cache : supprimer `node_modules/.vite`
-- Relancer le serveur : `npm run dev`
+```bash
+# Test rapide de l'API
+curl http://localhost:8000/api/categories
+```
+
+### Mode hors-ligne déclenché incorrectement
+
+**Symptôme** : Alerte "Mode hors-ligne" bien que l'internet soit actif
+
+**Solutions** :
+1. Vérifier la connexion internet
+2. Ouvrir les DevTools (F12) et regarder l'onglet Network
+3. Vérifier que l'API est accessible
+4. Rafraîchir la page (F5)
+
+### Erreurs Tailwind CSS
+
+**Symptôme** : Styles manquants ou cassés après mise à jour
+
+**Solutions** :
+1. Nettoyer les caches :
+   ```bash
+   rm -rf node_modules/.vite
+   npm run dev
+   ```
+2. Vérifier que `tailwind.config.ts` inclut tous les fichiers :
+   ```typescript
+   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']
+   ```
+
+### TypeScript : Erreur de type
+
+**Symptôme** : Erreurs TypeScript non-bloqu­antes après chaque changement
+
+**Solutions** :
+1. Redémarrer le serveur TypeScript : `Ctrl + Shift + P` > "TypeScript: Restart TS Server"
+2. Nettoyer le build cache :
+   ```bash
+   rm -rf dist
+   npm run build
+   ```
+
+### Port 5173 déjà utilisé
+
+**Symptôme** : Erreur "EADDRINUSE" en lançant `npm run dev`
+
+**Solution** :
+```bash
+# Utiliser un port différent
+npm run dev -- --port 3000
+```
+
+### Les dépendances ne s'installent pas
+
+**Symptôme** : Erreurs lors de `npm install`
+
+**Solutions** :
+```bash
+# Vider le cache npm
+npm cache clean --force
+
+# Réinstaller
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Tests Vitest qui échouent
+
+**Symptôme** : Les tests plantent avec des erreurs de modules
+
+**Solutions** :
+1. Vérifier que `vitest.config.ts` est correctement configuré
+2. Relancer les tests :
+   ```bash
+   npm run test -- --no-cache
+   ```
+
+**Besoin d'aide ?**
+- Consulter les [Issues du projet](https://github.com/your-repo/issues)
+- Vérifier les logs du navigateur (F12 > Console & Network)
 
 ## 📚 Ressources
 
