@@ -6,4 +6,8 @@ export const useCategories = () =>
     queryKey: ['categories'],
     queryFn: getCategoriesAsync,
     staleTime: 5 * 60 * 1000,
+    // select: (data) => {
+    //   console.log('Categorie select:', data);
+    //   Array.isArray(data)? data : [];
+    // }
   });

@@ -6,4 +6,7 @@ export const useProducts = (filters?: { category?: number; available?: boolean }
     queryKey: ['products', filters],
     queryFn: () => getProductsAsync(filters),
     staleTime: 30 * 1000,
+    // select: (data) => {
+    //   Array.isArray(data)? data : [];
+    // }
   });

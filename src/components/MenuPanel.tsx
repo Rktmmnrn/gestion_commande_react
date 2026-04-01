@@ -23,6 +23,9 @@ export default function MenuPanel({ onAddItem }: MenuPanelProps) {
   retry={() => window.location.reload()}
   />
 
+  const categoriesArray = Array.isArray(categories)? categories : [];
+  const productsArray = Array.isArray(products)? products : [];
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Category tabs */}
@@ -36,7 +39,7 @@ export default function MenuPanel({ onAddItem }: MenuPanelProps) {
         >
           Tout
         </button>
-        {categories?.map((c) => (
+        {categoriesArray?.map((c) => (
           <button
             key={c.id}
             onClick={() => setActiveCat(c.id)}
@@ -55,7 +58,7 @@ export default function MenuPanel({ onAddItem }: MenuPanelProps) {
           <ErrorMessage error={productsError} retry={refetch} />
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-            {products?.map((p) => (
+            {productsArray?.map((p) => (
               <button
                 key={p.id}
                 disabled={!p.available}

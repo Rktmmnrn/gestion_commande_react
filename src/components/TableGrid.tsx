@@ -24,7 +24,7 @@ export default function TableGrid({ selectedTable, onSelectTable }: TableGridPro
   const tableOrders = new Map<number, Order>();
 
   if (Array.isArray(orders)) {
-    orders.forEach((o) => {
+    orders?.forEach((o) => {
       if (o.status !== 'delivered' && o.status !== 'cancelled') {
         tableOrders.set(o.table_number, o);
       }

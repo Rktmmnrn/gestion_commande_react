@@ -10,6 +10,9 @@ export const useOrders = (filters?: { status?: string; table_number?: number }) 
     staleTime: 15000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    // select: (data) => {
+    //   return Array.isArray(data) ? data : [];
+    // }
   });
 
 export const useCreateOrder = () => {
