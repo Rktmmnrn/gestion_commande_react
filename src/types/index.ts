@@ -46,3 +46,20 @@ export interface AddItemPayload {
   product: number;
   quantity: number;
 }
+
+export interface AuthTokens {
+  access: string;
+  refresh: string;
+}
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  is_staff: boolean;
+  is_superuser: boolean;
+}
+
+export interface LoginPayload {
+  username: string;
+  password: string;
+}

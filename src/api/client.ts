@@ -10,9 +10,13 @@ const apiClient = axios.create({
   // withCredentials: true, // cookies/sessions
 });
 
-// intercepteur pour debug
+// intercepteur pour ajouter le token JWT
 apiClient.interceptors.request.use(
   (config) => {
+    const accessToken = localStorage.getItem('access_token');
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
     console.log('[API Request]', config.method?.toUpperCase(), config.url);
     console.log('[API Full URL]', `${config.baseURL}${config.url}`);
     return config;

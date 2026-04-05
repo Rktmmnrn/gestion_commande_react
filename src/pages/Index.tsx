@@ -1,5 +1,5 @@
-import POSPage from './POSPage';
+import LandingPage from './LandingPage';
 
 export default function Index() {
-  return <POSPage />;
+  return <LandingPage />;
 }
