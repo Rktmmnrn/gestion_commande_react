@@ -12,12 +12,20 @@ export const loginAsync = async (payload: LoginPayload): Promise<AuthTokens> => 
 export const decodeToken = (token: string): AuthUser => {
   const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
   const payload = JSON.parse(atob(base64));
-  return {
-    id: payload.user_id,
+  
+  // Convertir user_id en nombre si c'est une string
+  const userId = typeof payload.user_id === 'string' 
+    ? parseInt(payload.user_id, 10) 
+    : payload.user_id;
+  
+  const decodedUser: AuthUser = {
+    id: userId,
     username: payload.username ?? '',
     is_staff: payload.is_staff ?? false,
     is_superuser: payload.is_superuser ?? false,
   };
+  
+  return decodedUser;
 };
 
 export const refreshTokenAsync = async (refresh: string): Promise<{ access: string }> => {

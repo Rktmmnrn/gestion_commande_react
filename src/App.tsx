@@ -10,9 +10,12 @@ import LandingPage from '@/pages/LandingPage';
 import LoginPage from '@/pages/Login';
 import POSPage from '@/pages/POSPage';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
 import CategoriesAdmin from '@/pages/admin/CategoriesAdmin';
 import ProductsAdmin from '@/pages/admin/ProductsAdmin';
-import OrdersAdmin from '@/pages/admin/OrdersAdmin';
+import OrdersListPage from '@/pages/admin/OrdersListPage';
+import UserManagementPage from '@/pages/admin/UserManagementPage';
+import ActivityLogPage from '@/pages/admin/ActivityLogPage';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -39,10 +42,13 @@ const App = () => (
               {/* Routes Admin — authentifié + isAdmin */}
               <Route element={<ProtectedRoute requireAdmin />}>
                 <Route path="/admin" element={<AdminDashboard />}>
-                  <Route index element={<Navigate to="/admin/categories" replace />} />
+                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboardPage />} />
                   <Route path="categories" element={<CategoriesAdmin />} />
                   <Route path="products" element={<ProductsAdmin />} />
-                  <Route path="orders" element={<OrdersAdmin />} />
+                  <Route path="orders" element={<OrdersListPage />} />
+                  <Route path="users" element={<UserManagementPage />} />
+                  <Route path="logs" element={<ActivityLogPage />} />
                 </Route>
               </Route>
 

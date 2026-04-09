@@ -6,3 +6,9 @@ export {
   useUpdateOrderStatus,
   useAddOrderItem,
 } from './useOrders';
+export {
+  useAdminStats,
+  useRevenueData,
+  useBestSellers,
+  useOrderStatusData,
+} from './useAdminStats';

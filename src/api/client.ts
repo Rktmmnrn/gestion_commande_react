@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { setupInterceptors } from './axiosConfig';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/',
@@ -31,11 +32,16 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     console.error('[API Error]', error.response?.status, error.response?.data);
+    if (error.response?.status === 400) {
+      console.error('[API Error Details]', JSON.stringify(error.response.data, null, 2));
+    }
     if (error.code === 'ERR_NETWORK') {
       console.error('❌ Impossible de contacter le serveur. Vérifiez que Django est lancé sur http://localhost:8000');
     }
     return Promise.reject(error);
   }
 );
+
+setupInterceptors(apiClient);
 
 export default apiClient;

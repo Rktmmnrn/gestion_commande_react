@@ -3,6 +3,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
+import { QueryErrorBoundary } from './QueryErrorBoundary';
 import type { Product } from '@/types';
 import { Plus } from 'lucide-react';
 
@@ -10,21 +11,15 @@ interface MenuPanelProps {
   onAddItem: (product: Product) => void;
 }
 
-export default function MenuPanel({ onAddItem }: MenuPanelProps) {
-  const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
+function MenuPanelContent({ onAddItem }: MenuPanelProps) {
+  const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useCategories();
   const [activeCat, setActiveCat] = useState<number | undefined>();
-  const { data: products, isLoading: productsLoading, error: productsError, refetch } = useProducts(
+  const { data: products = [], isLoading: productsLoading, error: productsError, refetch } = useProducts(
     activeCat ? { category: activeCat } : undefined
   );
 
-  if (categoriesLoading) return <LoadingSpinner message='chargement des catégories...' />;
-  if (categoriesError) return <ErrorMessage
-  error={categoriesError}
-  retry={() => window.location.reload()}
-  />
-
-  const categoriesArray = Array.isArray(categories)? categories : [];
-  const productsArray = Array.isArray(products)? products : [];
+  if (categoriesLoading) return <LoadingSpinner message="Chargement des catégories..." />;
+  if (categoriesError) return <ErrorMessage error={categoriesError} retry={() => window.location.reload()} />;
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -39,11 +34,15 @@ export default function MenuPanel({ onAddItem }: MenuPanelProps) {
         >
           Tout
         </button>
-        {categoriesArray?.map((c) => (
+        {categories.map((c) => (
           <button
             key={c.id}
             onClick={() => setActiveCat(c.id)}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${activeCat === c.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+              activeCat === c.id 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+            }`}
           >
             {c.name}
           </button>
@@ -53,19 +52,19 @@ export default function MenuPanel({ onAddItem }: MenuPanelProps) {
       {/* Products grid */}
       <div className="flex-1 overflow-y-auto p-3">
         {productsLoading ? (
-          <LoadingSpinner message='chargement des produits...' />
+          <LoadingSpinner message="Chargement des produits..." />
         ) : productsError ? (
           <ErrorMessage error={productsError} retry={refetch} />
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-            {productsArray?.map((p) => (
+            {products.map((p) => (
               <button
                 key={p.id}
                 disabled={!p.available}
                 onClick={() => onAddItem(p)}
                 className={`relative flex flex-col items-start p-3 rounded-lg border transition-all text-left ${
                   p.available
-                    ? 'bg-card border-border hover:border-primary/50 hover:shadow-sm active:scale-[0.98]'
+                    ? 'bg-card border-border hover:border-primary/50 hover:shadow-sm active:scale-[0.98] cursor-pointer'
                     : 'bg-muted/50 border-border/50 opacity-50 cursor-not-allowed'
                 }`}
               >
@@ -81,5 +80,13 @@ export default function MenuPanel({ onAddItem }: MenuPanelProps) {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MenuPanel(props: MenuPanelProps) {
+  return (
+    <QueryErrorBoundary>
+      <MenuPanelContent {...props} />
+    </QueryErrorBoundary>
   );
 }

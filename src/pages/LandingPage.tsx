@@ -17,9 +17,9 @@ export default function LandingPage() {
   useEffect(() => {
     if (isAuthenticated) {
       if (isAdmin) {
-        navigate('/admin');
+        navigate('/admin/dashboard', { replace: true });
       } else {
-        navigate('/pos');
+        navigate('/pos', { replace: true });
       }
     }
   }, [isAuthenticated, isAdmin, navigate]);

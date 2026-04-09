@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { LayoutGrid, UtensilsCrossed, ClipboardList, LogOut, ChevronLeft } from 'lucide-react';
+import { LayoutGrid, UtensilsCrossed, ClipboardList, LogOut, ChevronLeft, BarChart3, Users, FileText } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -23,9 +23,12 @@ export default function AdminDashboard() {
     .toUpperCase() || 'A';
 
   const navigation = [
+    { label: 'Tableau de bord', icon: BarChart3, path: '/admin/dashboard' },
     { label: 'Catégories', icon: LayoutGrid, path: '/admin/categories' },
     { label: 'Produits', icon: UtensilsCrossed, path: '/admin/products' },
     { label: 'Commandes', icon: ClipboardList, path: '/admin/orders' },
+    { label: 'Utilisateurs', icon: Users, path: '/admin/users' },
+    { label: 'Logs', icon: FileText, path: '/admin/logs' },
   ];
 
   return (
@@ -129,7 +132,7 @@ export default function AdminDashboard() {
         <header className="bg-white border-b h-16 flex items-center px-8 shadow-sm">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Administration</h2>
-            <p className="text-xs text-gray-500">Gestion des catégories, produits et commandes</p>
+            <p className="text-xs text-gray-500">Gestion du restaurant et analyse des performances</p>
           </div>
         </header>
 

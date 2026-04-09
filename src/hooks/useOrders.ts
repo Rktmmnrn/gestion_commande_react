@@ -2,18 +2,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrdersAsync, createOrderAsync, updateOrderStatusAsync, addOrderItemAsync } from '@/api/orders';
 import type { CreateOrderPayload, AddItemPayload } from '@/types';
 
-export const useOrders = (filters?: { status?: string; table_number?: number }) =>
-  useQuery({
+export const useOrders = (filters?: { status?: string; table_number?: number }) => {
+  // Only fetch if token is available
+  const hasToken = !!localStorage.getItem('access_token');
+
+  return useQuery({
     queryKey: ['orders', filters],
     queryFn: () => getOrdersAsync(filters),
-    refetchInterval: 30000,
+    enabled: hasToken,
+    refetchInterval: hasToken ? 30000 : undefined,
     staleTime: 15000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    // select: (data) => {
-    //   return Array.isArray(data) ? data : [];
-    // }
   });
+};
 
 export const useCreateOrder = () => {
   const qc = useQueryClient();

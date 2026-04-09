@@ -15,7 +15,9 @@ export const getOrdersAsync = async (filters?: OrderFilters): Promise<Order[]> =
 };
 
 export const createOrderAsync = async (payload: CreateOrderPayload): Promise<Order> => {
+  console.log('[Orders] 📤 Envoi commande:', JSON.stringify(payload, null, 2));
   const { data } = await apiClient.post<Order>('orders/', payload);
+  console.log('[Orders] ✅ Commande créée:', data);
   return data;
 };
 
