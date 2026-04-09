@@ -28,6 +28,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -54,6 +55,8 @@ interface OrderItem {
   quantity: number;
   price: number;
 }
+
+import apiClient from '@/api/client';
 
 // Mock data - replace with actual API calls
 let mockOrders: Order[] = [
@@ -89,16 +92,58 @@ let mockOrders: Order[] = [
 ];
 
 const fetchOrders = async (): Promise<Order[]> => {
-  return mockOrders;
+  try {
+    // 🔄 Récupérer les vraies commandes de l'API
+    const { data } = await apiClient.get<any[]>('orders/');
+    
+    // Transformer les données API au format attendu
+    return data.map((order: any) => ({
+      id: order.id,
+      tableNumber: order.table_number,
+      itemsCount: order.items?.length || 0,
+      total: order.total || 0,
+      status: order.status,
+      createdBy: order.created_by_info?.username || 'N/A',
+      createdAt: order.created_at,
+      items: (order.items || []).map((item: any) => ({
+        id: item.id,
+        name: item.product_name,
+        quantity: item.quantity,
+        price: parseFloat(item.product_price || item.price),
+      })),
+    }));
+  } catch (error) {
+    console.error('Erreur lors de la récupération des commandes:', error);
+    // Retourner les données mock en cas d'erreur
+    return mockOrders;
+  }
 };
 
 const updateOrderStatus = async (id: number, status: Order['status']): Promise<Order | null> => {
-  // Mock API call - replace with actual API
-  const order = mockOrders.find(o => o.id === id);
-  if (order) {
-    order.status = status;
+  try {
+    // 🔄 Appeler l'API pour mettre à jour le statut
+    const { data } = await apiClient.patch<any>(`orders/${id}/status/`, { status });
+    
+    // Transformer la réponse au format attendu
+    return {
+      id: data.id,
+      tableNumber: data.table_number,
+      itemsCount: data.items?.length || 0,
+      total: data.total || 0,
+      status: data.status,
+      createdBy: data.created_by_info?.username || 'N/A',
+      createdAt: data.created_at,
+      items: (data.items || []).map((item: any) => ({
+        id: item.id,
+        name: item.product_name,
+        quantity: item.quantity,
+        price: parseFloat(item.product_price || item.price),
+      })),
+    };
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du statut:', error);
+    return null;
   }
-  return order || null;
 };
 
 const getStatusColor = (status: Order['status']) => {
@@ -349,6 +394,9 @@ export function OrdersList() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Détails de la Commande #{selectedOrder?.id}</DialogTitle>
+            <DialogDescription>
+              Consultez et gérez les détails de cette commande
+            </DialogDescription>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4">

@@ -29,6 +29,7 @@ import { ErrorMessage } from '@/components/ErrorMessage';
 import { Search, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import apiClient from '@/api/client';
 
 // Types
 interface ActivityLog {
@@ -43,32 +44,79 @@ interface ActivityLog {
   ipAddress?: string;
 }
 
-// Mock data - replace with actual API call
+// 🔄 Récupérer les logs d'activité depuis l'API
 const fetchActivityLogs = async (): Promise<ActivityLog[]> => {
-  return [
-    {
-      id: 1,
-      timestamp: '2024-01-15T14:30:00Z',
-      user: 'admin',
-      action: 'UPDATE',
-      entity: 'Product',
-      entityId: 5,
-      oldValue: 'Prix: 12.50€',
-      newValue: 'Prix: 13.00€',
-      ipAddress: '192.168.1.100',
-    },
-    {
-      id: 2,
-      timestamp: '2024-01-15T14:25:00Z',
-      user: 'marie',
-      action: 'CREATE',
-      entity: 'Order',
-      entityId: 123,
-      newValue: 'Nouvelle commande table 5',
-      ipAddress: '192.168.1.101',
-    },
-    // Add more mock logs...
-  ];
+  try {
+    // Récupérer les commandes (avec timestamps et audit info)
+    const { data: orders } = await apiClient.get<any[]>('orders/');
+    
+    // Construire les logs à partir de l'historique
+    const logs: ActivityLog[] = [];
+    let id = 1;
+    
+    // Ajouter changemènts de statut des commandes
+    orders?.forEach((order: any) => {
+      if (order.created_at) {
+        logs.push({
+          id: id++,
+          timestamp: order.created_at,
+          user: order.created_by_info?.username || 'N/A',
+          action: 'CREATE',
+          entity: 'Order',
+          entityId: order.id,
+          newValue: `Commande créée table ${order.table_number}`,
+        });
+      }
+      
+      if (order.updated_at && order.updated_at !== order.created_at) {
+        logs.push({
+          id: id++,
+          timestamp: order.updated_at,
+          user: order.updated_by_info?.username || 'N/A',
+          action: 'UPDATE',
+          entity: 'Order',
+          entityId: order.id,
+          newValue: `Statut: ${order.status}`,
+        });
+      }
+    });
+    
+    // Récupérer les produits
+    const { data: products } = await apiClient.get<any[]>('products/');
+    
+    products?.forEach((product: any) => {
+      if (product.created_at) {
+        logs.push({
+          id: id++,
+          timestamp: product.created_at,
+          user: product.created_by_info?.username || 'N/A',
+          action: 'CREATE',
+          entity: 'Product',
+          entityId: product.id,
+          newValue: `Produit créé: ${product.name}`,
+        });
+      }
+      
+      if (product.updated_at && product.updated_at !== product.created_at) {
+        logs.push({
+          id: id++,
+          timestamp: product.updated_at,
+          user: product.updated_by_info?.username || 'N/A',
+          action: 'UPDATE',
+          entity: 'Product',
+          entityId: product.id,
+          newValue: `Produit modifié: ${product.name}`,
+        });
+      }
+    });
+    
+    // Trier par date décroissante
+    logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return logs;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des logs:', error);
+    return [];
+  }
 };
 
 const getActionColor = (action: ActivityLog['action']) => {

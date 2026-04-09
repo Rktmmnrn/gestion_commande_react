@@ -2,7 +2,7 @@ import { createContext, useState, useEffect, ReactNode, useCallback } from 'reac
 import type { AuthUser, LoginPayload } from '@/types';
 import { loginAsync, decodeToken, refreshTokenAsync } from '@/api/auth';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -13,9 +13,10 @@ interface AuthContextType {
   refreshToken: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+// Composant Provider séparé pour compatibilité Vite Fast Refresh
+function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,20 +135,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user;
   const isAdmin = user ? user.is_staff || user.is_superuser : false;
 
+  const value: AuthContextType = {
+    user,
+    isAuthenticated,
+    isAdmin,
+    isLoading,
+    error,
+    login,
+    logout,
+    refreshToken,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        isAdmin,
-        isLoading,
-        error,
-        login,
-        logout,
-        refreshToken,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export { AuthContext, AuthProvider };
+    // </AuthContext.Provider>
+//   );
+// };

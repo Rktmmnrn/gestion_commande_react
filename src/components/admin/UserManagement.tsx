@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import {
   useReactTable,
   getCoreRowModel,
@@ -27,6 +28,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -46,9 +48,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorMessage } from '@/components/ErrorMessage';
-import { Plus, Search, Edit, Trash2, UserPlus } from 'lucide-react';
+import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import apiClient from '@/api/client';
 
 // Types
 interface User {
@@ -56,49 +59,81 @@ interface User {
   username: string;
   email: string;
   role: 'admin' | 'waiter';
-  status: 'active' | 'inactive';
-  lastLogin: string;
-  createdAt: string;
+  is_staff?: boolean;
+  date_joined?: string;
 }
 
-// Mock data - replace with actual API calls
+// 🔄 Récupérer les utilisateurs depuis l'API
 const fetchUsers = async (): Promise<User[]> => {
-  return [
-    {
-      id: 1,
-      username: 'admin',
-      email: 'admin@restaurant.com',
-      role: 'admin',
-      status: 'active',
-      lastLogin: '2024-01-15T10:30:00Z',
-      createdAt: '2024-01-01T00:00:00Z',
-    },
-    {
-      id: 2,
-      username: 'marie',
-      email: 'marie@restaurant.com',
-      role: 'waiter',
-      status: 'active',
-      lastLogin: '2024-01-15T09:15:00Z',
-      createdAt: '2024-01-02T00:00:00Z',
-    },
-    // Add more mock users...
-  ];
+  try {
+    const { data } = await apiClient.get<any[]>('users/');
+    return data.map((user: any) => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      is_staff: user.is_staff,
+      date_joined: user.date_joined,
+    }));
+  } catch (error) {
+    console.error('Erreur lors de la récupération des utilisateurs:', error);
+    return [];
+  }
 };
 
-const createUser = async (user: Omit<User, 'id' | 'createdAt' | 'lastLogin'>) => {
-  // Mock API call
-  return { ...user, id: Date.now(), createdAt: new Date().toISOString(), lastLogin: null };
+// 🔄 Créer un nouvel utilisateur
+const createUser = async (user: Omit<User, 'id' | 'date_joined'>): Promise<User> => {
+  try {
+    const { data } = await apiClient.post('users/', {
+      username: user.username,
+      email: user.email,
+      password: (user as any).password,
+      role: user.role,
+      is_staff: user.role === 'admin',
+    });
+    return {
+      id: data.id,
+      username: data.username,
+      email: data.email,
+      role: data.role,
+      is_staff: data.is_staff,
+      date_joined: data.date_joined,
+    };
+  } catch (error) {
+    console.error('Erreur lors de la création de l\'utilisateur:', error);
+    throw error;
+  }
 };
 
-const updateUser = async (id: number, user: Partial<User>) => {
-  // Mock API call
-  return { ...user, id };
+// 🔄 Mettre à jour un utilisateur
+const updateUser = async (id: number, user: Partial<User>): Promise<User> => {
+  try {
+    const { data } = await apiClient.patch(`users/${id}/`, {
+      email: user.email,
+      role: user.role,
+    });
+    return {
+      id: data.id,
+      username: data.username,
+      email: data.email,
+      role: data.role,
+      is_staff: data.is_staff,
+      date_joined: data.date_joined,
+    };
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+    throw error;
+  }
 };
 
-const deleteUser = async (id: number) => {
-  // Mock API call
-  return { id };
+// 🔄 Supprimer un utilisateur
+const deleteUser = async (id: number): Promise<void> => {
+  try {
+    await apiClient.delete(`users/${id}/`);
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+    throw error;
+  }
 };
 
 export function UserManagement() {
@@ -178,7 +213,7 @@ export function UserManagement() {
       email: user.email,
       password: '',
       role: user.role,
-      status: user.status,
+      status: 'active',
     });
   };
 
@@ -204,29 +239,19 @@ export function UserManagement() {
       size: 100,
       cell: ({ row }) => (
         <Badge variant={row.original.role === 'admin' ? 'default' : 'secondary'}>
-          {row.original.role}
+          {row.original.role === 'admin' ? 'Admin' : 'Serveur'}
         </Badge>
       ),
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      size: 100,
-      cell: ({ row }) => (
-        <Badge variant={row.original.status === 'active' ? 'default' : 'destructive'}>
-          {row.original.status}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: 'lastLogin',
-      header: 'Dernière connexion',
+      accessorKey: 'date_joined',
+      header: 'Créé le',
       size: 150,
       cell: ({ row }) => (
         <span className="text-sm">
-          {row.original.lastLogin
-            ? format(new Date(row.original.lastLogin), 'dd/MM/yyyy HH:mm', { locale: fr })
-            : 'Jamais'
+          {row.original.date_joined
+            ? format(new Date(row.original.date_joined), 'dd/MM/yyyy', { locale: fr })
+            : 'N/A'
           }
         </span>
       ),
@@ -304,13 +329,16 @@ export function UserManagement() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Nouveau Utilisateur
+              <Plus className="w-4 h-4 mr-2" />
+              Nouvel Utilisateur
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Créer un nouvel utilisateur</DialogTitle>
+              <DialogDescription>
+                Ajoutez un nouveau compte administrateur ou serveur
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -460,6 +488,9 @@ export function UserManagement() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifier l'utilisateur</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations du compte
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
