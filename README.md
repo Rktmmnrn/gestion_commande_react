@@ -27,14 +27,16 @@ Une application web moderne de gestion de commandes (Point of Sale) construite a
 ## 🎯 Vue d'ensemble
 
 Cette application permet de :
+- **Authentification sécurisée** avec JWT et gestion des rôles (Admin/Waiter)
 - **Visualiser les catégories** de produits disponibles
 - **Consulter les produits** avec leurs détails, prix et disponibilité
 - **Gérer un panier d'articles** avec quantités
-- **Créer et modifier les commandes** en temps réel
+- **Créer et modifier les commandes** en temps réel (logique intelligente Option B)
 - **Suivre l'état des commandes** (pending, preparing, ready, delivered, cancelled)
-- **Mode hors-ligne** avec détection automatique de la connexion
 - **Interface utilisateur responsive** et accessible avec composants modernes
 - **Gestion des tables** pour les commandes (numéro de table)
+- **Mode hors-ligne** avec détection automatique de la connexion
+- **Tableau de bord Admin** pour les administrateurs (rôle admin uniquement)
 
 ## 🛠️ Stack Technologique
 
@@ -95,7 +97,127 @@ Cette application permet de :
 - **Développement** : http://localhost:5173
 - **Production** : À déployer selon votre configuration
 
-## 🚀 Commandes Disponibles
+## � Authentification & Rôles
+
+### Système d'Authentification
+
+L'application utilise un **système d'authentification JWT** avec gestion complète des rôles :
+
+#### 1. Page de Connexion
+- Adresse : `/login`
+- Accepte un **username** et un **password**
+- Génère un **token JWT** utilisé pour toutes les requêtes
+
+#### 2. Gestion des Tokens
+- Token **access** : Utilisé pour authentifier les requêtes (durée: 60 minutes)
+- Token **refresh** : Utilisé pour obtenir un nouveau token (durée: 7 jours)
+- Les tokens sont **stockés dans localStorage**
+- **Rehydratation automatique** : L'utilisateur reste connecté après rafraîchissement de page
+
+#### 3. Contexte d'Authentification
+
+Le contexte `AuthContext` gère :
+```typescript
+{
+  user,                    // Utilisateur actuellement connecté
+  isAuthenticated,        // Booléen d'authentification
+  isAdmin,                // Booléen pour vérifier le rôle admin
+  accessToken,            // Token JWT courant
+  login(payload),         // Fonction de connexion
+  logout(),              // Fonction de déconnexion
+  refreshToken(),        // Fonction de rafraîchissement du token
+}
+```
+
+### Rôles & Permissions Frontend
+
+#### Rôle Waiter (Serveur)
+- ✅ Accès au POS (gestion des commandes)
+- ✅ Visualiser les produits et catégories
+- ✅ Créer et modifier les commandes de ses tables
+- ❌ Pas d'accès au dashboard admin
+- ❌ Pas de gestion des utilisateurs
+
+#### Rôle Admin (Administrateur)
+- ✅ Accès complet au POS
+- ✅ Accès au dashboard admin `/admin`
+- ✅ Gestion des utilisateurs
+- ✅ Gestion des produits et catégories
+- ✅ Vue d'ensemble des commandes
+
+### Routes Protégées
+
+```typescript
+// Route public
+<Route path="/login" element={<Login />} />
+
+// Routes protégées (authentifié requis)
+<Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+<Route path="/pos" element={<ProtectedRoute><POSPage /></ProtectedRoute>} />
+
+// Routes admin seulement
+<Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+```
+
+### Déconnexion
+
+Un bouton **"Déconnexion"** est disponible en haut à droite dans le POS :
+- Supprime les tokens du localStorage
+- Redirige vers la page de login
+- Affiche une notification de confirmation
+## 📌 Gestion Intelligente des Commandes (Option B)
+
+L'application implémente une **logique intelligente** pour gérer les commandes :
+
+### Comportement
+
+1. **Première commande** pour une table
+   - Lance une **nouvele commande** avec le statut "pending"
+   - Ajoute les articles sélectionnés
+   
+2. **Commandes suivantes** pour la même table
+   - **Réutilise la commande "pending" existante**
+   - Ajoute les nouveaux articles
+   - **Augmente les quantités** si un article identique existe
+   
+3. **Avantages**
+   - ✅ Une seule commande active par table
+   - ✅ Accumulation progressive des articles
+   - ✅ Gestion simplifiée du panier
+   - ✅ Meilleure traçabilité des commandes
+
+### Exemple d'Utilisation
+
+```
+Table 1 → Ajoute Café (qty: 1) → Commande #5 créée
+Table 1 → Ajoute Croissant (qty: 1) → Café (qty: 1) + Croissant (qty: 1) ajoutés à #5
+Table 1 → Ajoute Café (qty: 1) → Café (qty: 2) + Croissant (qty: 1) dans #5
+```
+
+### Appels à l'API
+
+```bash
+# Première commande
+POST /api/orders/
+{
+  "table_number": 1,
+  "items": [
+    {"product": 1, "quantity": 1}
+  ]
+}
+# Résultat: Création de la commande #5
+
+# Deuxième appel (même table)
+POST /api/orders/
+{
+  "table_number": 1,
+  "items": [
+    {"product": 2, "quantity": 1}
+  ]
+}
+# Résultat: Articles ajoutés à la commande #5 existante
+```
+## �🚀 Commandes Disponibles
 
 ```bash
 # Développement - Serveur de développement avec hot reload
@@ -245,6 +367,22 @@ Les intercepteurs sont configurés pour :
 
 ## 🌐 Fonctionnalités Principales
 
+### Authentification & Autorisation
+- **Système JWT complet** avec tokens d'accès et rafraîchissement
+- **Gestion des rôles** (Admin et Waiter) avec permissions granulaires
+- **Contexte d'authentification** global pour toute l'application
+- **Routes protégées** avec redirection automatique vers le login
+- **Rehydratation automatique** de la session après rafraîchissement de page
+- **Déconnexion sécurisée** avec suppression des tokens
+- Implémentation : [src/context/AuthContext.tsx](src/context/AuthContext.tsx)
+
+### Gestion Intelligente des Commandes (Option B)
+- **Réutilisation automatique** des commandes "pending" existantes
+- **Ajout progressif des articles** à la même commande
+- **Augmentation des quantités** si un article existe déjà
+- **Une seule commande active** par table
+- **Meilleure traçabilité** des modifications
+
 ### Mode Hors-Ligne
 - **Détection automatique** de la perte de connexion internet
 - **Notifications toast** pour informer l'utilisateur de l'état de connexion
@@ -256,12 +394,14 @@ Les intercepteurs sont configurés pour :
 - **Modification des quantités**
 - **Calcul automatique** du sous-total et total
 - **Panier persistant** durant la session
+- **Synchronisation entre onglets** via événements storage
 
 ### Gestion des Commandes
 - **Création** de nouvelles commandes par table
-- **Ajout** d'articles aux commandes
-- **Suivi du statut** en temps réel
-- **Historique** des commandes
+- **Ajout intelligent** d'articles aux commandes existantes
+- **Suivi du statut** en temps réel (pending, preparing, ready, delivered, cancelled)
+- **Historique** des commandes avec filtrage
+- **Mise à jour des statuts** en temps réel
 
 ## 🎨 Design System
 
