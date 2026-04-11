@@ -1,48 +1,19 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  flexRender,
-  ColumnDef,
-  SortingState,
-  ColumnFiltersState,
-} from '@tanstack/react-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -51,351 +22,216 @@ import { ErrorMessage } from '@/components/ErrorMessage';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
 import apiClient from '@/api/client';
 
-// Types
 interface User {
   id: number;
   username: string;
   email: string;
   role: 'admin' | 'waiter';
   is_staff?: boolean;
+  is_active?: boolean;
   date_joined?: string;
 }
 
-// 🔄 Récupérer les utilisateurs depuis l'API
+interface UserForm {
+  username: string;
+  email: string;
+  password: string;
+  role: 'admin' | 'waiter';
+  is_active: boolean;
+}
+
+const defaultForm: UserForm = {
+  username: '',
+  email: '',
+  password: '',
+  role: 'waiter',
+  is_active: true,
+};
+
 const fetchUsers = async (): Promise<User[]> => {
-  try {
-    const { data } = await apiClient.get<any[]>('users/');
-    return data.map((user: any) => ({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      is_staff: user.is_staff,
-      date_joined: user.date_joined,
-    }));
-  } catch (error) {
-    console.error('Erreur lors de la récupération des utilisateurs:', error);
-    return [];
-  }
+  const { data } = await apiClient.get<User[]>('users/');
+  return data;
 };
 
-// 🔄 Créer un nouvel utilisateur
-const createUser = async (user: Omit<User, 'id' | 'date_joined'>): Promise<User> => {
-  try {
-    const { data } = await apiClient.post('users/', {
-      username: user.username,
-      email: user.email,
-      password: (user as any).password,
-      role: user.role,
-      is_staff: user.role === 'admin',
-    });
-    return {
-      id: data.id,
-      username: data.username,
-      email: data.email,
-      role: data.role,
-      is_staff: data.is_staff,
-      date_joined: data.date_joined,
-    };
-  } catch (error) {
-    console.error('Erreur lors de la création de l\'utilisateur:', error);
-    throw error;
-  }
+const createUser = async (form: UserForm): Promise<User> => {
+  const { data } = await apiClient.post('users/', {
+    username: form.username,
+    email: form.email,
+    password: form.password,
+    role: form.role,
+    is_staff: form.role === 'admin',
+    is_active: form.is_active,
+  });
+  return data;
 };
 
-// 🔄 Mettre à jour un utilisateur
-const updateUser = async (id: number, user: Partial<User>): Promise<User> => {
-  try {
-    const { data } = await apiClient.patch(`users/${id}/`, {
-      email: user.email,
-      role: user.role,
-    });
-    return {
-      id: data.id,
-      username: data.username,
-      email: data.email,
-      role: data.role,
-      is_staff: data.is_staff,
-      date_joined: data.date_joined,
-    };
-  } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
-    throw error;
-  }
+const updateUser = async (id: number, form: Partial<UserForm>): Promise<User> => {
+  const payload: any = {
+    email: form.email,
+    role: form.role,
+    is_active: form.is_active,
+  };
+  if (form.password) payload.password = form.password;
+  const { data } = await apiClient.patch(`users/${id}/`, payload);
+  return data;
 };
 
-// 🔄 Supprimer un utilisateur
 const deleteUser = async (id: number): Promise<void> => {
-  try {
-    await apiClient.delete(`users/${id}/`);
-  } catch (error) {
-    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
-    throw error;
-  }
+  await apiClient.delete(`users/${id}/`);
 };
 
 export function UserManagement() {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    role: 'waiter' as 'admin' | 'waiter',
-    status: 'active' as 'active' | 'inactive',
-  });
-
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [form, setForm] = useState<UserForm>(defaultForm);
 
   const { data: users, isLoading, error } = useQuery({
     queryKey: ['users'],
     queryFn: fetchUsers,
   });
 
+  const filtered = useMemo(() => {
+    if (!users) return [];
+    const q = search.toLowerCase().trim();
+    if (!q) return users;
+    return users.filter(
+      (u) =>
+        u.username.toLowerCase().includes(q) ||
+        (u.email ?? '').toLowerCase().includes(q) ||
+        u.role.toLowerCase().includes(q)
+    );
+  }, [users, search]);
+
   const createMutation = useMutation({
     mutationFn: createUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      setIsCreateDialogOpen(false);
-      resetForm();
+      toast.success('Utilisateur créé');
+      setIsCreateOpen(false);
+      setForm(defaultForm);
+    },
+    onError: (e: any) => {
+      const msg = e?.response?.data?.username?.[0] ?? e?.response?.data?.detail ?? 'Erreur lors de la création';
+      toast.error(msg);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<User> }) => updateUser(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<UserForm> }) => updateUser(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Utilisateur mis à jour');
       setEditingUser(null);
-      resetForm();
+      setForm(defaultForm);
     },
+    onError: () => toast.error('Erreur lors de la mise à jour'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Utilisateur supprimé');
     },
+    onError: () => toast.error('Erreur lors de la suppression'),
   });
 
-  const resetForm = () => {
-    setFormData({
-      username: '',
-      email: '',
-      password: '',
-      role: 'waiter',
-      status: 'active',
-    });
-  };
-
-  const handleCreate = () => {
-    createMutation.mutate(formData);
-  };
-
-  const handleUpdate = () => {
-    if (editingUser) {
-      updateMutation.mutate({ id: editingUser.id, data: formData });
-    }
-  };
-
-  const handleDelete = (id: number) => {
-    deleteMutation.mutate(id);
-  };
-
-  const openEditDialog = (user: User) => {
+  const openEdit = (user: User) => {
     setEditingUser(user);
-    setFormData({
+    setForm({
       username: user.username,
-      email: user.email,
+      email: user.email ?? '',
       password: '',
       role: user.role,
-      status: 'active',
+      is_active: user.is_active ?? true,
     });
   };
-
-  const columns: ColumnDef<User>[] = [
-    {
-      accessorKey: 'id',
-      header: 'ID',
-      size: 80,
-    },
-    {
-      accessorKey: 'username',
-      header: 'Username',
-      size: 120,
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email',
-      size: 200,
-    },
-    {
-      accessorKey: 'role',
-      header: 'Role',
-      size: 100,
-      cell: ({ row }) => (
-        <Badge variant={row.original.role === 'admin' ? 'default' : 'secondary'}>
-          {row.original.role === 'admin' ? 'Admin' : 'Serveur'}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: 'date_joined',
-      header: 'Créé le',
-      size: 150,
-      cell: ({ row }) => (
-        <span className="text-sm">
-          {row.original.date_joined
-            ? format(new Date(row.original.date_joined), 'dd/MM/yyyy', { locale: fr })
-            : 'N/A'
-          }
-        </span>
-      ),
-    },
-    {
-      id: 'actions',
-      header: 'Actions',
-      size: 120,
-      cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => openEditDialog(row.original)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Êtes-vous sûr de vouloir supprimer l'utilisateur "{row.original.username}" ?
-                  Cette action est irréversible.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => handleDelete(row.original.id)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Supprimer
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      ),
-    },
-  ];
-
-  const table = useReactTable({
-    data: users || [],
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      columnFilters,
-      globalFilter,
-    },
-  });
 
   if (isLoading) return <LoadingSpinner />;
   if (error) return <ErrorMessage error={error as Error} />;
+
+  const UserFormFields = ({ isEdit = false }: { isEdit?: boolean }) => (
+    <div className="space-y-4">
+      <div>
+        <Label>Nom d'utilisateur</Label>
+        <Input
+          value={form.username}
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          disabled={isEdit}
+          placeholder="nom_utilisateur"
+        />
+      </div>
+      <div>
+        <Label>Email</Label>
+        <Input
+          type="email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          placeholder="email@exemple.com"
+        />
+      </div>
+      <div>
+        <Label>{isEdit ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe'}</Label>
+        <Input
+          type="password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          placeholder="••••••••"
+        />
+      </div>
+      <div>
+        <Label>Rôle</Label>
+        <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as 'admin' | 'waiter' })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="waiter">Serveur</SelectItem>
+            <SelectItem value="admin">Administrateur</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch
+          checked={form.is_active}
+          onCheckedChange={(v) => setForm({ ...form, is_active: v })}
+        />
+        <Label>Compte actif</Label>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Gestion des Utilisateurs</h2>
+          <h2 className="text-2xl font-bold">Gestion des utilisateurs</h2>
           <p className="text-muted-foreground">Gérer les comptes administrateur et serveur</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => setForm(defaultForm)}>
               <Plus className="w-4 h-4 mr-2" />
-              Nouvel Utilisateur
+              Nouvel utilisateur
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Créer un nouvel utilisateur</DialogTitle>
-              <DialogDescription>
-                Ajoutez un nouveau compte administrateur ou serveur
-              </DialogDescription>
+              <DialogTitle>Créer un utilisateur</DialogTitle>
+              <DialogDescription>Ajouter un compte administrateur ou serveur</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="username">Nom d'utilisateur</Label>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="Entrez le nom d'utilisateur"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Entrez l'email"
-                />
-              </div>
-              <div>
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Entrez le mot de passe"
-                />
-              </div>
-              <div>
-                <Label htmlFor="role">Rôle</Label>
-                <Select value={formData.role} onValueChange={(value: 'admin' | 'waiter') => setFormData({ ...formData, role: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="waiter">Serveur</SelectItem>
-                    <SelectItem value="admin">Administrateur</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="status"
-                  checked={formData.status === 'active'}
-                  onCheckedChange={(checked) => setFormData({ ...formData, status: checked ? 'active' : 'inactive' })}
-                />
-                <Label htmlFor="status">Actif</Label>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Annuler
-              </Button>
-              <Button onClick={handleCreate} disabled={createMutation.isPending}>
+            <UserFormFields />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Annuler</Button>
+              <Button
+                onClick={() => createMutation.mutate(form)}
+                disabled={createMutation.isPending || !form.username || !form.password}
+              >
                 {createMutation.isPending ? 'Création...' : 'Créer'}
               </Button>
             </div>
@@ -406,172 +242,114 @@ export function UserManagement() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Utilisateurs</CardTitle>
-            <div className="flex gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Rechercher..."
-                  value={globalFilter}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                  className="pl-9 w-64"
-                />
-              </div>
+            <CardTitle>Utilisateurs ({filtered.length})</CardTitle>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Nom, email, rôle..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Nom d'utilisateur</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Rôle</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Créé le</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
+              {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                     Aucun utilisateur trouvé.
                   </TableCell>
                 </TableRow>
+              ) : (
+                filtered.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.id}</TableCell>
+                    <TableCell className="font-medium">{user.username}</TableCell>
+                    <TableCell>{user.email || '—'}</TableCell>
+                    <TableCell>
+                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                        {user.role === 'admin' ? 'Admin' : 'Serveur'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${user.is_active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {user.is_active !== false ? 'Actif' : 'Inactif'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {user.date_joined
+                        ? format(new Date(user.date_joined), 'dd/MM/yyyy', { locale: fr })
+                        : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(user)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer l'utilisateur</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Supprimer définitivement « {user.username} » ? Cette action est irréversible.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteMutation.mutate(user.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
-
-          <div className="flex items-center justify-end space-x-2 py-4">
-            <div className="flex-1 text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} sur{' '}
-              {table.getFilteredRowModel().rows.length} utilisateurs sélectionnés.
-            </div>
-            <div className="space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Précédent
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Suivant
-              </Button>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifier l'utilisateur</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations du compte
-            </DialogDescription>
+            <DialogDescription>{editingUser?.username}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-username">Nom d'utilisateur</Label>
-              <Input
-                id="edit-username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-email">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-password">Mot de passe (laisser vide pour ne pas changer)</Label>
-              <Input
-                id="edit-password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-role">Rôle</Label>
-              <Select value={formData.role} onValueChange={(value: 'admin' | 'waiter') => setFormData({ ...formData, role: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="waiter">Serveur</SelectItem>
-                  <SelectItem value="admin">Administrateur</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="edit-status"
-                checked={formData.status === 'active'}
-                onCheckedChange={(checked) => setFormData({ ...formData, status: checked ? 'active' : 'inactive' })}
-              />
-              <Label htmlFor="edit-status">Actif</Label>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setEditingUser(null)}>
-              Annuler
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">Supprimer</Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Êtes-vous sûr de vouloir supprimer l'utilisateur "{editingUser?.username}" ?
-                    Cette action est irréversible.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => {
-                      if (editingUser) handleDelete(editingUser.id);
-                      setEditingUser(null);
-                    }}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    Supprimer
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <Button onClick={handleUpdate} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? 'Mise à jour...' : 'Mettre à jour'}
+          <UserFormFields isEdit />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setEditingUser(null)}>Annuler</Button>
+            <Button
+              onClick={() => {
+                if (editingUser) updateMutation.mutate({ id: editingUser.id, data: form });
+              }}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? 'Mise à jour...' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

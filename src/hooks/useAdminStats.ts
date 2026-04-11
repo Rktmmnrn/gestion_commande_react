@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/api/client';
 
-// Types for admin stats
 export interface AdminStats {
   ordersToday: {
     count: number;
     revenue: number;
-    trend: number; // percentage change from yesterday
+    trend: number;
   };
   tablesOccupied: {
     occupied: number;
@@ -43,89 +43,162 @@ export interface OrderStatusData {
   color: string;
 }
 
-// API functions - replace with actual API calls
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'En attente',
+  preparing: 'En préparation',
+  ready: 'Prêt',
+  delivered: 'Livré',
+  cancelled: 'Annulé',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'hsl(45, 93%, 58%)',
+  preparing: 'hsl(217, 91%, 60%)',
+  ready: 'hsl(142, 76%, 36%)',
+  delivered: 'hsl(220, 10%, 60%)',
+  cancelled: 'hsl(0, 84%, 60%)',
+};
+
 const fetchAdminStats = async (): Promise<AdminStats> => {
-  // Mock data - replace with actual API call to GET /api/admin/stats/today
+  const [ordersRes, usersRes] = await Promise.all([
+    apiClient.get<any[]>('orders/'),
+    apiClient.get<any[]>('users/').catch(() => ({ data: [] })),
+  ]);
+
+  const orders: any[] = ordersRes.data || [];
+  const users: any[] = usersRes.data || [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todaysOrders = orders.filter((o) => {
+    const created = new Date(o.created_at);
+    return created >= today;
+  });
+
+  const todayRevenue = todaysOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+  const activeTables = new Set(
+    orders
+      .filter((o) => o.status !== 'delivered' && o.status !== 'cancelled')
+      .map((o) => o.table_number)
+  );
+
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthOrders = orders.filter((o) => new Date(o.created_at) >= monthStart);
+  const monthRevenue = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const avgPerOrder = monthOrders.length > 0 ? monthRevenue / monthOrders.length : 0;
+
+  const adminCount = users.filter((u) => u.role === 'admin' || u.is_staff).length;
+  const waiterCount = users.filter((u) => u.role === 'waiter' && !u.is_staff).length;
+
   return {
     ordersToday: {
-      count: 45,
-      revenue: 1250.50,
-      trend: 12.5,
+      count: todaysOrders.length,
+      revenue: todayRevenue,
+      trend: 0,
     },
     tablesOccupied: {
-      occupied: 8,
+      occupied: activeTables.size,
       total: 12,
-      trend: -5.2,
+      trend: 0,
     },
     monthlyRevenue: {
-      amount: 28500.75,
-      average: 45.80,
-      trend: 8.3,
+      amount: monthRevenue,
+      average: avgPerOrder,
+      trend: 0,
     },
     activeUsers: {
-      count: 12,
-      lastActivity: '2 min ago',
-      adminCount: 3,
-      waiterCount: 9,
+      count: users.length,
+      lastActivity: 'maintenant',
+      adminCount,
+      waiterCount,
     },
   };
 };
 
-const fetchRevenueData = async (range: string = '7days'): Promise<RevenueData[]> => {
-  // Mock data - replace with actual API call to GET /api/admin/stats/revenue?range=7days
-  const data = [];
+const fetchRevenueData = async (): Promise<RevenueData[]> => {
+  const { data: orders } = await apiClient.get<any[]>('orders/');
+  const result: Record<string, { revenue: number; orders: number }> = {};
+
   const today = new Date();
   for (let i = 6; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    data.push({
-      date: date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }),
-      revenue: Math.floor(Math.random() * 500) + 200,
-      orders: Math.floor(Math.random() * 20) + 5,
-      average: Math.floor(Math.random() * 30) + 20,
-    });
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
+    result[key] = { revenue: 0, orders: 0 };
   }
-  return data;
+
+  (orders || []).forEach((o) => {
+    const d = new Date(o.created_at);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    if (d >= sevenDaysAgo) {
+      const key = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
+      if (result[key]) {
+        result[key].revenue += o.total || 0;
+        result[key].orders += 1;
+      }
+    }
+  });
+
+  return Object.entries(result).map(([date, v]) => ({
+    date,
+    revenue: parseFloat(v.revenue.toFixed(2)),
+    orders: v.orders,
+    average: v.orders > 0 ? parseFloat((v.revenue / v.orders).toFixed(2)) : 0,
+  }));
 };
 
 const fetchBestSellers = async (): Promise<BestSellerData[]> => {
-  // Mock data - replace with actual API call
-  return [
-    { name: 'Pizza Margherita', quantity: 45 },
-    { name: 'Burger Classic', quantity: 38 },
-    { name: 'Pâtes Carbonara', quantity: 32 },
-    { name: 'Salade César', quantity: 28 },
-    { name: 'Tiramisu', quantity: 25 },
-    { name: 'Coca-Cola', quantity: 22 },
-    { name: 'Frites', quantity: 20 },
-    { name: 'Pizza Pepperoni', quantity: 18 },
-    { name: 'Café', quantity: 15 },
-    { name: 'Dessert du jour', quantity: 12 },
-  ];
+  const { data: orders } = await apiClient.get<any[]>('orders/');
+  const counts: Record<string, number> = {};
+
+  (orders || []).forEach((o) => {
+    (o.items || []).forEach((item: any) => {
+      const name = item.product_name || 'Inconnu';
+      counts[name] = (counts[name] || 0) + (item.quantity || 0);
+    });
+  });
+
+  return Object.entries(counts)
+    .map(([name, quantity]) => ({ name, quantity }))
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, 10);
 };
 
 const fetchOrderStatusData = async (): Promise<OrderStatusData[]> => {
-  // Mock data - replace with actual API call
-  return [
-    { name: 'En attente', value: 12, color: 'hsl(45, 93%, 58%)' },
-    { name: 'En préparation', value: 8, color: 'hsl(217, 91%, 60%)' },
-    { name: 'Prêt', value: 15, color: 'hsl(142, 76%, 36%)' },
-    { name: 'Annulé', value: 3, color: 'hsl(0, 84%, 60%)' },
-  ];
+  const { data: orders } = await apiClient.get<any[]>('orders/');
+  const counts: Record<string, number> = {};
+
+  (orders || []).forEach((o) => {
+    counts[o.status] = (counts[o.status] || 0) + 1;
+  });
+
+  return Object.entries(counts)
+    .filter(([status]) => STATUS_LABELS[status])
+    .map(([status, value]) => ({
+      name: STATUS_LABELS[status],
+      value,
+      color: STATUS_COLORS[status] || 'hsl(220, 10%, 60%)',
+    }));
 };
 
-// React Query hooks
 export const useAdminStats = () => {
   return useQuery({
     queryKey: ['admin-stats'],
     queryFn: fetchAdminStats,
+    staleTime: 30000,
+    refetchInterval: 60000,
   });
 };
 
 export const useRevenueData = (range: string = '7days') => {
   return useQuery({
     queryKey: ['revenue-data', range],
-    queryFn: () => fetchRevenueData(range),
+    queryFn: fetchRevenueData,
+    staleTime: 30000,
   });
 };
 
@@ -133,6 +206,7 @@ export const useBestSellers = () => {
   return useQuery({
     queryKey: ['best-sellers'],
     queryFn: fetchBestSellers,
+    staleTime: 30000,
   });
 };
 
@@ -140,5 +214,6 @@ export const useOrderStatusData = () => {
   return useQuery({
     queryKey: ['order-status-data'],
     queryFn: fetchOrderStatusData,
+    staleTime: 30000,
   });
 };

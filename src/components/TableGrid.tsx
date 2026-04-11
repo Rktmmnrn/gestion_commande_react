@@ -15,7 +15,7 @@ const statusColor: Record<string, string> = {
   preparing: 'bg-blue-500/20 border-blue-500/50 text-blue-300',
   ready: 'bg-green-500/20 border-green-500/50 text-green-300',
   delivered: 'bg-muted/30 border-border text-muted-foreground',
-  free: 'bg-card border-border text-white hover:border-primary',
+  free: 'bg-transparent border-border text-white hover:border-primary',
 };
 
 export default function TableGrid({ selectedTable, onSelectTable }: TableGridProps) {
