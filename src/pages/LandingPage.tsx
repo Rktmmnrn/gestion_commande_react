@@ -1,6 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, RefreshCw, ClipboardList } from 'lucide-react';
 
@@ -12,59 +10,40 @@ const features = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, isAdmin } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      if (isAdmin) {
-        navigate('/admin/dashboard', { replace: true });
-      } else {
-        navigate('/pos', { replace: true });
-      }
-    }
-  }, [isAuthenticated, isAdmin, navigate]);
-
-  if (isAuthenticated) {
-    return null; // Will redirect
-  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="text-center space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+      <div className="text-center space-y-10 px-6 max-w-3xl w-full">
         {/* Header */}
-        <div className="space-y-4">
-          <h1 className="text-5xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
-            RestoPOS
+        <div className="space-y-3">
+          <h1 className="text-6xl font-bold tracking-tight text-amber-400">
+            Gérer les commandes de votre restau
           </h1>
-          <p className="text-lg" style={{ color: 'hsl(var(--pos-sidebar-foreground))' }}>
-            La solution tout-en-un pour gérer votre restaurant avec efficacité et élégance.
+          <p className="text-slate-400 text-lg">
+            La solution pour gérer votre restaurant avec efficacité et élégance.
           </p>
         </div>
         {/* features */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {features.map((f) => (
             <div
               key={f.title}
-              className="rounded-xl border p-6 space-y-3 text-center"
-              style={{
-                background: 'hsl(220 25% 16%)',
-                borderColor: 'hsl(220 20% 22%)',
-              }}
+              className="rounded-xl border border-slate-700 bg-slate-800/60 p-6 space-y-3 text-center"
             >
-              <div className="mx-auto w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'hsl(var(--primary) / 0.15)' }}>
-                <f.icon className="w-6 h-6" style={{ color: 'hsl(var(--primary))' }} />
+              <div className="mx-auto w-11 h-11 rounded-lg flex items-center justify-center bg-amber-400/10">
+                <f.icon className="w-5 h-5 text-amber-400" />
               </div>
-              <h3 className="font-semibold" style={{ color: 'hsl(var(--pos-sidebar-foreground))' }}>{f.title}</h3>
-              <p className="text-sm" style={{ color: 'hsl(220 15% 55%)' }}>{f.desc}</p>
+              <h3 className="font-semibold text-slate-200 text-sm">{f.title}</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
         <Button
-          onClick={() => navigate('/login')}
+          onClick={() => navigate('/pos')}
           size="lg"
-          className="mt-8"
+          className="bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold px-10 text-base"
         >
-          Commencer
+          Entrer
         </Button>
       </div>
     </div>

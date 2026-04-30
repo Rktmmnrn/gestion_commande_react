@@ -3,14 +3,10 @@ import { getOrdersAsync, createOrderAsync, updateOrderStatusAsync, addOrderItemA
 import type { CreateOrderPayload, AddItemPayload } from '@/types';
 
 export const useOrders = (filters?: { status?: string; table_number?: number }) => {
-  // Only fetch if token is available
-  const hasToken = !!localStorage.getItem('access_token');
-
   return useQuery({
     queryKey: ['orders', filters],
     queryFn: () => getOrdersAsync(filters),
-    enabled: hasToken,
-    refetchInterval: hasToken ? 30000 : undefined,
+    refetchInterval: 30000,
     staleTime: 15000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),

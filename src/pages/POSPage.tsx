@@ -1,14 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import TableGrid from '@/components/TableGrid';
 import MenuPanel from '@/components/MenuPanel';
 import OrderSummary from '@/components/OrderSummary';
+import AdminPasswordModal from '@/components/AdminPasswordModal';
 import { useOfflineMode } from '@/hooks/useOfflineMode';
 import { Button } from '@/components/ui/button';
 import type { Product } from '@/types';
 import { toast } from 'sonner'
-import { WifiOff, LogOut } from 'lucide-react';
+import { WifiOff, Settings } from 'lucide-react';
 
 interface CartItem {
   product: Product;
@@ -20,7 +20,6 @@ const SELECTED_TABLE_KEY = 'pos_selected_table';
 
 export default function POSPage() {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
   const { isOffline } = useOfflineMode();
   const [selectedTable, setSelectedTable] = useState<number | null>(() => {
     const stored = localStorage.getItem(SELECTED_TABLE_KEY);
@@ -38,13 +37,6 @@ export default function POSPage() {
     }
     return [];
   });
-
-  const handleLogout = useCallback(() => {
-    logout();
-    toast.success('Déconnecté avec succès');
-    navigate('/login');
-  }, [logout, navigate]);
-
   // Save cart to localStorage when it changes
   useEffect(() => {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
@@ -69,6 +61,7 @@ export default function POSPage() {
           toast.info('Panier synchronisé depuis un autre onglet');
         } catch (e) {
           console.error('Failed to sync cart:', e);
+          toast.info('Erreur de synchonisation !!');
         }
       }
     };
@@ -111,24 +104,22 @@ export default function POSPage() {
         </div>
       )}
 
-      {/* Navigation bar with logout button */}
+      {/* Navigation */}
       <nav className="bg-white border-b border-border px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold">Système POS</h1>
-          {user && (
-            <span className="text-sm text-muted-foreground">
-              Utilisateur: <strong>{user.username}</strong>
-            </span>
-          )}
+          <h1 className="text-lg font-semibold">Commande</h1>
+          <span className="text-sm text-muted-foreground">
+            User
+          </span>
         </div>
         <Button
-          variant="destructive"
+          variant="outline"
           size="sm"
-          onClick={handleLogout}
-          className="gap-2"
+          onClick={() => navigate('/admin')}
+          className="gap-2 border-slate-600 text-slate-300 hover:text-white hover:border-slate-400"
         >
-          <LogOut className="h-4 w-4" />
-          Déconnexion
+          <Settings className="h-4 w-4" />
+          Gestion
         </Button>
       </nav>
 

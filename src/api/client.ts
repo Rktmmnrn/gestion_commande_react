@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { setupInterceptors } from './axiosConfig';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/',
@@ -11,37 +10,22 @@ const apiClient = axios.create({
   // withCredentials: true, // cookies/sessions
 });
 
-// intercepteur pour ajouter le token JWT
-apiClient.interceptors.request.use(
-  (config) => {
-    const accessToken = localStorage.getItem('access_token');
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    console.log('[API Request]', config.method?.toUpperCase(), config.url);
-    console.log('[API Full URL]', `${config.baseURL}${config.url}`);
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('admin_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 apiClient.interceptors.response.use(
-  (response) => {
-    console.log('[API Response]', response.status, response.config.url);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('[API Error]', error.response?.status, error.response?.data);
-    if (error.response?.status === 400) {
-      console.error('[API Error Details]', JSON.stringify(error.response.data, null, 2));
-    }
-    if (error.code === 'ERR_NETWORK') {
-      console.error('❌ Impossible de contacter le serveur. Vérifiez que Django est lancé sur http://localhost:8000');
+    if (import.meta.env.DEV) {
+      console.error('[API Error]', error.response?.status, error.response?.data);
     }
     return Promise.reject(error);
   }
 );
-
-setupInterceptors(apiClient);
 
 export default apiClient;

@@ -1,33 +1,26 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAdminAuth } from '@/context/AdminAuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { LayoutGrid, UtensilsCrossed, ClipboardList, LogOut, ChevronLeft, BarChart3, Users, FileText } from 'lucide-react';
+// import { Badge } from '@/components/ui/badge';
+import { LayoutGrid, UtensilsCrossed, ClipboardList, ChevronLeft, BarChart3, FileText, LogOut } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout } = useAdminAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/pos');
   };
-
-  const initials = user?.username
-    ?.split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase() || 'A';
 
   const navigation = [
     { label: 'Tableau de bord', icon: BarChart3, path: '/admin/dashboard' },
     { label: 'Catégories', icon: LayoutGrid, path: '/admin/categories' },
     { label: 'Produits', icon: UtensilsCrossed, path: '/admin/products' },
     { label: 'Commandes', icon: ClipboardList, path: '/admin/orders' },
-    { label: 'Utilisateurs', icon: Users, path: '/admin/users' },
     { label: 'Logs', icon: FileText, path: '/admin/logs' },
   ];
 
@@ -44,8 +37,8 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             {sidebarOpen && (
               <div className="flex-1">
-                <h1 className="text-lg font-bold text-amber-400">RestoPOS</h1>
-                <p className="text-xs text-slate-400">Restaurant</p>
+                <h1 className="text-lg font-bold text-amber-400">CommandeResto</h1>
+                <p className="text-xs text-slate-400">Administration</p>
               </div>
             )}
             <button
@@ -61,12 +54,12 @@ export default function AdminDashboard() {
         <div className="p-4 border-b border-slate-800">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 bg-amber-500">
-              <AvatarFallback className="bg-amber-500 text-slate-950 font-bold">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-amber-500 text-slate-950 font-bold">A</AvatarFallback>
             </Avatar>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{user?.username}</p>
-                <Badge className="text-xs mt-1">Admin</Badge>
+                <p className="text-xs mt-1">Admin</p>
+                <p className="text-sm font-semibold truncate">Accès complet</p>
               </div>
             )}
           </div>
@@ -80,14 +73,14 @@ export default function AdminDashboard() {
               <NavLink key={item.path} to={item.path}>
                 {({ isActive }) => (
                   <button
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition text-sm ${
                       isActive
                         ? 'bg-amber-500 text-slate-950 font-semibold'
                         : 'text-slate-300 hover:bg-slate-800'
                     }`}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    {sidebarOpen && <span className="text-sm truncate">{item.label}</span>}
+                    {sidebarOpen && <span className="truncate">{item.label}</span>}
                   </button>
                 )}
               </NavLink>
@@ -107,7 +100,7 @@ export default function AdminDashboard() {
                 }`}
               >
                 <span>↩</span>
-                {sidebarOpen && <span className="truncate">Vue POS</span>}
+                {sidebarOpen && <span className="truncate">Retour POS</span>}
               </button>
             )}
           </NavLink>
