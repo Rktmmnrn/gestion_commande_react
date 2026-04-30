@@ -1,53 +1,784 @@
-# Gestion de Commandes - Application React (POS)
+# 🍽️ CommandeResto - Système de Gestion de Commandes
 
-Une application web moderne de gestion de commandes (Point of Sale) construite avec React 19, TypeScript, Vite et shadcn/ui. Application complète pour la gestion des commandes avec support du mode hors-ligne.
+Une application web moderne de gestion de commandes (Point of Sale) construite avec **React 18.3**, **TypeScript**, **Vite** et **shadcn/ui**. Solution complète pour la gestion des commandes en restaurant avec support du mode hors-ligne et interface d'administration.
+
+**Version** : 0.0.0 | **Type** : Module ES | **Licence** : MIT
+
+---
 
 ## 📑 Table des matières
 
-1. [Vue d'ensemble](#-vue-densemble)
-2. [Stack Technologique](#-stack-technologique)
-3. [Installation & Démarrage Rapide](#-installation--démarrage-rapide)
-4. [Commandes Disponibles](#-commandes-disponibles)
-5. [Structure du Projet](#-structure-du-projet)
-6. [Modèles de Données](#--modèles-de-données)
-7. [Fonctionnalités Principales](#-fonctionnalités-principales)
-8. [Design System](#-design-system)
-9. [Composants Principaux](#-composants-principaux)
-10. [Hooks Personnalisés](#-hooks-personnalisés)
-11. [Tests](#-tests)
-12. [Contribution](#-contribution)
-13. [Dépendances Clés](#--dépendances-clés)
-14. [Linting](#-linting)
-15. [Déploiement](#-déploiement)
-16. [Conventions de Code](#--conventions-de-code)
-17. [Dépannage](#-troubleshooting)
-18. [Ressources](#-ressources)
-19. [Licence](#--licence)
+- [🎯 Vue d'ensemble](#-vue-densemble)
+- [🛠️ Stack Technologique](#️-stack-technologique)
+- [📦 Installation & Démarrage Rapide](#-installation--démarrage-rapide)
+- [📜 Commandes Disponibles](#-commandes-disponibles)
+- [🏗️ Structure du Projet](#️-structure-du-projet)
+- [📊 Modèles de Données](#-modèles-de-données)
+- [✨ Fonctionnalités Principales](#-fonctionnalités-principales)
+- [🎨 Design System & UI](#-design-system--ui)
+- [🧩 Architecture & Composants](#-architecture--composants)
+- [🪝 Hooks Personnalisés](#-hooks-personnalisés)
+- [🧪 Tests](#-tests)
+- [⚙️ Configuration](#️-configuration)
+- [⚠️ Problèmes Connus & À Corriger](#️-problèmes-connus--à-corriger)
+- [🐛 Dépannage](#-dépannage)
+- [📚 Ressources](#-ressources)
+
+---
 
 ## 🎯 Vue d'ensemble
 
-Cette application permet de :
-- **Authentification sécurisée** avec JWT et gestion des rôles (Admin/Waiter)
-- **Visualiser les catégories** de produits disponibles
-- **Consulter les produits** avec leurs détails, prix et disponibilité
-- **Gérer un panier d'articles** avec quantités
-- **Créer et modifier les commandes** en temps réel (logique intelligente Option B)
-- **Suivre l'état des commandes** (pending, preparing, ready, delivered, cancelled)
-- **Interface utilisateur responsive** et accessible avec composants modernes
-- **Gestion des tables** pour les commandes (numéro de table)
-- **Mode hors-ligne** avec détection automatique de la connexion
-- **Tableau de bord Admin** pour les administrateurs (rôle admin uniquement)
+**CommandeResto** est une application de Point of Sale (POS) complète permettant :
+
+✅ **Gestion des Commandes**
+- Création et modification des commandes en temps réel
+- Suivi des états (pending → preparing → ready → delivered/cancelled)
+- Gestion des tables et numérotation
+- Panier intelligent avec mise à jour dynamique
+
+✅ **Gestion Admin**
+- Tableau de bord avec métriques clés (KPI)
+- Gestion des catégories et produits
+- Historique et logs d'activité
+- Export de données (PDF, Excel)
+- Graphiques et tendances de vente
+
+✅ **Authentification & Sécurité**
+- Authentification JWT avec tokens
+- Contrôle d'accès basé sur les rôles (Admin/Waiter)
+- Gestion sécurisée des sessions
+
+✅ **Expérience Utilisateur**
+- Interface responsive et moderne
+- Mode hors-ligne avec synchronisation automatique
+- Persistance des données en localStorage
+- Détection et gestion des connexions réseau
+- Notifications temps réel (sonner)
+- Support tactile optimisé
+
+---
 
 ## 🛠️ Stack Technologique
 
-### Frontend
-- **React 19** - Bibliothèque UI moderne
-- **TypeScript** - Typage statique complet
-- **Vite** - Bundler ultra-rapide et serveur de développement
-- **React Router** - Routage client-side
-- **React Query (@tanstack/react-query)** - Gestion du cache et des requêtes API
-- **React Hook Form** - Gestion des formulaires
-- **TailwindCSS** - Framework CSS utilitaire
+### 🎨 Frontend & UI
+| Technologie | Version | Rôle |
+|-------------|---------|------|
+| **React** | ^18.3.1 | Framework UI principal |
+| **TypeScript** | Latest | Typage statique |
+| **Vite** | Latest | Bundler & dev server (port 8080) |
+| **React Router** | ^6.30.1 | Routage client-side |
+| **shadcn/ui** | Latest | Composants UI accessibles (Radix UI) |
+| **TailwindCSS** | ^3 | Framework CSS utilitaire |
+
+### 📡 Gestion d'État & API
+| Technologie | Version | Rôle |
+|-------------|---------|------|
+| **@tanstack/react-query** | ^5.83.0 | Gestion du cache API & synchronisation |
+| **@tanstack/react-table** | ^8.21.3 | Gestion avancée des tableaux |
+| **Axios** | ^1.13.6 | Client HTTP |
+| **React Hook Form** | ^7.72.1 | Gestion des formulaires |
+| **Zod** | ^3.25.76 | Validation de schémas TypeScript |
+
+### 📊 Visualisation & Graphiques
+| Technologie | Version | Rôle |
+|-------------|---------|------|
+| **Recharts** | ^2.15.4 | Graphiques et charts |
+| **lucide-react** | ^0.462.0 | Icônes modernes |
+| **react-to-pdf** | ^3.2.2 | Export en PDF |
+
+### 🎯 Utilitaires
+| Technologie | Version | Rôle |
+|-------------|---------|------|
+| **date-fns** | ^3.6.0 | Manipulation des dates |
+| **sonner** | ^1.7.4 | Notifications toast |
+| **class-variance-authority** | ^0.7.1 | Gestion des variantes CSS |
+| **clsx** | ^2.1.1 | Conditionnels CSS |
+| **tailwind-merge** | ^2.6.0 | Fusion intelligente des classes |
+
+### 🧪 Développement & Testing
+- **Vitest** - Test runner ultra-rapide
+- **@testing-library/react** - Utilitaires de test React
+- **@playwright/test** - E2E testing (fixtures en TypeScript)
+- **ESLint 9** - Linting du code JavaScript/TypeScript
+- **Autoprefixer** - Préfixes CSS automatiques
+
+---
+
+## 📦 Installation & Démarrage Rapide
+
+### Prérequis
+- **Node.js** ≥ 18.x
+- **npm** ≥ 10.x (ou yarn/pnpm)
+- **Backend API** disponible sur `http://localhost:8000/api/` (Django/DRF par défaut)
+
+### 1️⃣ Installation des dépendances
+
+```bash
+npm install
+```
+
+### 2️⃣ Configuration (optionnel)
+
+Créer un fichier `.env` à la racine (si API sur autre hôte) :
+```env
+VITE_API_BASE_URL=http://localhost:8000/api
+```
+
+### 3️⃣ Démarrage du serveur de développement
+
+```bash
+npm run dev
+```
+
+Accédez à l'application : **http://localhost:8080**
+
+### 📱 Accès aux pages
+- **Page d'accueil** : http://localhost:8080/
+- **Interface POS** : http://localhost:8080/pos
+- **Tableau de bord Admin** : http://localhost:8080/admin (login requis)
+- **404** : http://localhost:8080/any-invalid-route
+
+---
+
+## 📜 Commandes Disponibles
+
+```bash
+# ✅ Développement
+npm run dev              # Démarrer le serveur dev (Vite)
+
+# 🏗️ Production
+npm run build            # Build optimisé pour production
+npm run build:dev        # Build en mode développement
+
+# 🔍 Qualité du Code
+npm run lint             # Linter tout le projet avec ESLint
+
+# 👁️ Aperçu
+npm run preview          # Prévisualiser la build en local
+
+# 🧪 Tests
+npm test                 # Lancer tous les tests (run une seule fois)
+npm run test:watch      # Mode watch pour développement (TDD)
+```
+
+---
+
+## 🏗️ Structure du Projet
+
+```
+react_gestion_commande/
+│
+├── 📄 Configuration & Build
+│   ├── vite.config.ts           # Config Vite (alias @/, port 8080)
+│   ├── tsconfig.json            # Config TypeScript principale
+│   ├── tsconfig.app.json        # Spécifique à l'app
+│   ├── tsconfig.node.json       # Pour les fichiers config
+│   ├── eslint.config.js         # Configuration ESLint 9
+│   ├── postcss.config.cjs       # PostCSS (Tailwind)
+│   ├── tailwind.config.js       # TailwindCSS
+│   ├── components.json          # Config shadcn/ui
+│   ├── vitest.config.ts         # Config Vitest
+│   ├── playwright.config.ts      # Config Playwright E2E
+│   └── package.json             # Dépendances & scripts
+│
+├── 📑 Public
+│   └── public/
+│       └── robots.txt           # SEO
+│
+├── 🎯 Source Code (src/)
+│   ├── App.tsx                  # Composant racine + Routes
+│   ├── main.tsx                 # Point d'entrée React
+│   ├── index.css                # Styles globaux
+│   ├── App.css                  # Styles App
+│   ├── vite-env.d.ts            # Types Vite
+│   │
+│   ├── 📡 API (src/api/)
+│   │   ├── client.ts            # Instance Axios centralisée
+│   │   ├── admin.ts             # Endpoints admin
+│   │   ├── auth.ts              # Endpoints authentification
+│   │   ├── categories.ts        # Endpoints catégories
+│   │   ├── orders.ts            # Endpoints commandes
+│   │   ├── products.ts          # Endpoints produits
+│   │   └── client.ts            # Endpoints client
+│   │
+│   ├── 🎨 Composants (src/components/)
+│   │   ├── Composants Principaux
+│   │   │   ├── MenuPanel.tsx           # Menu des produits
+│   │   │   ├── TableGrid.tsx           # Sélection des tables
+│   │   │   ├── OrderSummary.tsx        # Résumé du panier
+│   │   │   ├── NavLink.tsx             # Lien de navigation
+│   │   │   ├── LoadingSpinner.tsx      # Spinner de chargement
+│   │   │   ├── ErrorMessage.tsx        # Affichage des erreurs
+│   │   │   └── ErrorBoundary.tsx       # Boundary pour erreurs React
+│   │   │
+│   │   ├── Modal & Dialogs
+│   │   │   └── AdminPasswordModal.tsx  # Modal de login admin
+│   │   │
+│   │   ├── 🎯 Admin (src/components/admin/)
+│   │   │   ├── Dashboard.tsx           # Vue du dashboard
+│   │   │   ├── KPICard.tsx             # Cartes KPI
+│   │   │   ├── OrdersList.tsx          # Liste des commandes
+│   │   │   ├── ActivityLog.tsx         # Log d'activité
+│   │   │   ├── ExportButtons.tsx       # Boutons d'export (PDF, CSV)
+│   │   │   └── TrendIndicator.tsx      # Indicateurs de tendance
+│   │   │
+│   │   ├── 📊 Graphiques (src/components/charts/)
+│   │   │   ├── RevenueChart.tsx        # Graphique des revenus
+│   │   │   ├── OrdersStatusChart.tsx   # Graphique des statuts
+│   │   │   └── BestSellersChart.tsx    # Graphique top produits
+│   │   │
+│   │   └── 🎭 UI Components (src/components/ui/) - shadcn/ui
+│   │       ├── accordion.tsx           # Accordéon
+│   │       ├── button.tsx              # Boutons
+│   │       ├── card.tsx                # Cartes
+│   │       ├── dialog.tsx              # Dialogs modaux
+│   │       ├── form.tsx                # Intégration React Hook Form
+│   │       ├── input.tsx               # Champs input
+│   │       ├── table.tsx               # Tableaux
+│   │       ├── tabs.tsx                # Onglets
+│   │       ├── toast.tsx & toaster.tsx # Notifications
+│   │       ├── dropdown-menu.tsx       # Menus déroulants
+│   │       ├── select.tsx              # Sélecteurs
+│   │       ├── sidebar.tsx             # Barre latérale
+│   │       ├── skeleton.tsx            # Placeholders de chargement
+│   │       ├── badge.tsx               # Badges
+│   │       ├── calendar.tsx            # Calendrier
+│   │       ├── chart.tsx               # Wrapper Recharts
+│   │       └── ... (30+ composants UI)
+│   │
+│   ├── 🧠 Context (src/context/)
+│   │   └── AdminAuthContext.tsx        # Context authentification admin
+│   │
+│   ├── 🪝 Hooks (src/hooks/)
+│   │   ├── index.ts                    # Export des hooks
+│   │   ├── useAuth.ts                  # Hook auth (legacy)
+│   │   ├── useAdminStats.ts            # Statistiques admin
+│   │   ├── useCategories.ts            # Gestion catégories
+│   │   ├── useOfflineMode.ts           # Détection mode hors-ligne
+│   │   ├── useOrders.ts                # Gestion commandes
+│   │   ├── useProducts.ts              # Gestion produits
+│   │   ├── use-mobile.tsx              # Détection mobile
+│   │   ├── use-toast.ts                # Hook notifications
+│   │   └── useAdminStats.ts            # Statistiques admin
+│   │
+│   ├── 📚 Lib (src/lib/)
+│   │   └── utils.ts                    # Fonctions utilitaires (cn())
+│   │
+│   ├── 📄 Pages (src/pages/)
+│   │   ├── Index.tsx                   # Accueil
+│   │   ├── LandingPage.tsx             # Page d'accueil
+│   │   ├── POSPage.tsx                 # Interface principale POS
+│   │   ├── NotFound.tsx                # 404
+│   │   │
+│   │   └── 🎯 Admin (src/pages/admin/)
+│   │       ├── AdminDashboard.tsx      # Layout admin (erreur: manque import isAdmin)
+│   │       ├── AdminDashboardPage.tsx  # Page dashboard
+│   │       ├── CategoriesAdmin.tsx     # Gestion catégories
+│   │       ├── ProductsAdmin.tsx       # Gestion produits
+│   │       ├── OrdersListPage.tsx      # Liste commandes
+│   │       ├── OrdersAdmin.tsx         # Gestion commandes
+│   │       └── ActivityLogPage.tsx     # Logs d'activité
+│   │
+│   ├── 🧪 Tests (src/test/)
+│   │   ├── example.test.ts             # Tests exemple
+│   │   └── setup.ts                    # Config tests
+│   │
+│   └── 📋 Types (src/types/)
+│       └── index.ts                    # Types globaux TypeScript
+│
+├── 📖 Documentation
+│   ├── README.md                       # Ce fichier
+│   ├── playwright-fixture.ts           # Fixtures Playwright
+│   └── index.html                      # Point d'entrée HTML
+│
+└── 🔧 Autres
+    └── .gitignore
+```
+
+---
+
+## 📊 Modèles de Données
+
+### 🛒 Product
+```typescript
+interface Product {
+  id: number;
+  name: string;
+  price: string;           // Format "10.50"
+  category: number;        // ID catégorie
+  category_name: string;   // Nom catégorie
+  available: boolean;      // Disponibilité
+}
+```
+
+### 📂 Category
+```typescript
+interface Category {
+  id: number;
+  name: string;
+}
+```
+
+### 🛍️ Order
+```typescript
+interface Order {
+  id: number;
+  table_number: number;        // 1-99
+  status: OrderStatus;         // pending | preparing | ready | delivered | cancelled
+  items: OrderItem[];          // Articles de la commande
+  total: number;               // Total en euros
+  created_at: string;          // ISO datetime
+  updated_at: string;          // ISO datetime
+}
+
+interface OrderItem {
+  id: number;
+  product: number;             // ID produit
+  product_name: string;        // Nom produit
+  quantity: number;            // Quantité
+  price: string;               // Prix unitaire
+  subtotal: number;            // quantity * price
+}
+
+type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+```
+
+### 👤 Auth
+```typescript
+interface AuthTokens {
+  access: string;      // JWT access token
+  refresh: string;     // JWT refresh token
+}
+
+interface AuthUser {
+  id: number;
+  username: string;
+  is_staff: boolean;   // Admin?
+  is_superuser: boolean;
+}
+```
+
+---
+
+## ✨ Fonctionnalités Principales
+
+### 🏪 Interface POS (src/pages/POSPage.tsx)
+
+| Fonctionnalité | Détails |
+|---|---|
+| **Sélection de table** | Grille de tables 1-20 avec numérotation |
+| **Menu produits** | Filtrage par catégories, recherche |
+| **Panier** | Ajout/suppression d'articles, modification quantités |
+| **Persistance cart** | Sauvegarde automatique en localStorage |
+| **Sync multi-onglets** | Les changements se synchronisent en temps réel |
+| **Mode hors-ligne** | Les commandes s'enfilent et se synchro au retour |
+| **Création commande** | POST /orders/ avec articles |
+| **Admin login** | Modal mot de passe pour accès admin |
+
+### 🎯 Tableau de Bord Admin (src/pages/admin/AdminDashboard.tsx)
+
+| Section | Composants | Fonctionnalité |
+|---|---|---|
+| **Sidebar** | MenuPanel + NavLink | Navigation 5 sections |
+| **Header** | Avatar user + logout | Gestion session |
+| **Dashboard** | KPICard, Charts | Métriques clés (chiffre d'affaires, commandes) |
+| **Graphiques** | RevenueChart, OrdersStatusChart, BestSellersChart | Tendances et analytics |
+| **Gestion produits** | ProductsAdmin | CRUD complet |
+| **Gestion catégories** | CategoriesAdmin | CRUD complet |
+| **Gestion commandes** | OrdersListPage | Statuts, détails |
+| **Logs** | ActivityLogPage | Historique d'activité |
+
+### 🔐 Authentification
+
+- **Login waiter** : `POSPage` - Pas de mot de passe requis
+- **Login admin** : `AdminPasswordModal` - Mot de passe sécurisé
+- **JWT tokens** : Stockage en localStorage
+- **Token refresh** : Automatique via React Query
+
+---
+
+## 🎨 Design System & UI
+
+### 🎭 Composants UI (shadcn/ui)
+
+Tous les composants shadcn/ui sont installés et accessibles dans `src/components/ui/` :
+
+**Navigation & Layout**
+- `sidebar.tsx` - Barre latérale responsive
+- `navigation-menu.tsx` - Menu de navigation
+- `breadcrumb.tsx` - Fil d'Ariane
+- `menubar.tsx` - Barre de menu
+
+**Forms & Input**
+- `form.tsx` - Intégration React Hook Form
+- `input.tsx`, `textarea.tsx` - Champs de saisie
+- `select.tsx`, `checkbox.tsx`, `radio-group.tsx` - Sélecteurs
+- `slider.tsx` - Curseur
+- `input-otp.tsx` - Codes OTP
+
+**Data Display**
+- `table.tsx` - Tableaux (intégration React Table)
+- `tabs.tsx` - Onglets
+- `accordion.tsx` - Accordéon
+- `pagination.tsx` - Pagination
+- `skeleton.tsx` - Placeholders
+
+**Feedback & Modals**
+- `dialog.tsx`, `alert-dialog.tsx` - Modals
+- `drawer.tsx` - Tiroir latéral
+- `toast.tsx`, `toaster.tsx` - Notifications
+- `alert.tsx` - Alertes
+- `progress.tsx` - Barres de progression
+
+**Styling**
+- **Framework** : TailwindCSS v3
+- **Couleurs** : Palette cohérente (slate, amber, accent colors)
+- **Responsive** : Mobile-first avec breakpoints sm, md, lg, xl, 2xl
+- **Animations** : Transitions fluides avec `tailwindcss-animate`
+
+### 🎨 Architecture CSS
+
+- **Global styles** : `src/index.css` (Tailwind directives)
+- **Component styles** : Inline Tailwind classes (utility-first)
+- **CSS-in-JS** : Zéro - utilisé Tailwind purement
+- **Dark mode** : Support via `next-themes` (configurable)
+
+---
+
+## 🧩 Architecture & Composants
+
+### 🏗️ Flux d'Arborescence
+
+```
+App (routing root)
+├── ErrorBoundary (gestion erreurs)
+├── AdminAuthProvider (context auth)
+├── QueryClientProvider (@tanstack/react-query)
+│   └── TooltipProvider (shadcn)
+│       └── Sonner (notifications)
+│           └── BrowserRouter
+│               └── Routes
+│                   ├── / (LandingPage)
+│                   ├── /pos (POSPage)
+│                   ├── /admin (AdminDashboard) [PROTECTED]
+│                   │   ├── /admin/dashboard (AdminDashboardPage)
+│                   │   ├── /admin/categories (CategoriesAdmin)
+│                   │   ├── /admin/products (ProductsAdmin)
+│                   │   ├── /admin/orders (OrdersListPage)
+│                   │   └── /admin/logs (ActivityLogPage)
+│                   └── /* (NotFound)
+```
+
+### 📡 Flux de Données (Requêtes API)
+
+```
+React Component
+    ↓
+useHook (useProducts, useOrders, etc.)
+    ↓
+@tanstack/react-query (caching)
+    ↓
+api/ (client.ts) → Axios instance
+    ↓
+Django DRF Backend (http://localhost:8000/api)
+```
+
+### 🔄 Gestion d'État
+
+| Niveau | Outil | Usage |
+|---|---|---|
+| **Global** | AdminAuthContext | Authentification admin (JWT) |
+| **API/Cache** | React Query | Requêtes API, caching intelligent |
+| **Local Component** | useState | État local UI (modals, inputs) |
+| **Persistant** | localStorage | Cart, table sélectionnée, auth tokens |
+
+---
+
+## 🪝 Hooks Personnalisés
+
+### Core Hooks
+
+#### 📊 `useAdminStats()`
+Récupère les statistiques du tableau de bord admin.
+```typescript
+const { stats, isLoading, error } = useAdminStats();
+// stats: { revenue, orderCount, topProducts, trends }
+```
+
+#### 🛒 `useProducts()`
+Gestion complète des produits avec filtrage.
+```typescript
+const { products, isLoading, refetch } = useProducts(categoryId?);
+```
+
+#### 📂 `useCategories()`
+Récupère et gère les catégories.
+```typescript
+const { categories, isLoading } = useCategories();
+```
+
+#### 🛍️ `useOrders()`
+Gestion des commandes avec statuts.
+```typescript
+const { orders, createOrder, updateOrder, isLoading } = useOrders();
+```
+
+#### 🔐 `useAuth()` (legacy)
+Hook d'authentification (deprecated, préférer context).
+
+#### 📱 `useOfflineMode()`
+Détecte si l'app est en mode hors-ligne.
+```typescript
+const { isOffline } = useOfflineMode();
+// Sync automatique au retour en ligne
+```
+
+#### 🍞 `use-toast.ts`
+Hook des notifications sonner.
+```typescript
+const { toast } = useToast();
+toast({ title: "Succès", description: "Commande créée" });
+```
+
+---
+
+## 🧪 Tests
+
+### Configuration
+
+- **Test runner** : Vitest (ultra-rapide, compatible Jest)
+- **React Testing Library** : Tests intégrés
+- **E2E Testing** : Playwright avec fixtures TypeScript
+
+### Lancer les tests
+
+```bash
+# Run une fois
+npm test
+
+# Watch mode (TDD)
+npm run test:watch
+```
+
+### Exemple de test
+
+```typescript
+// src/test/example.test.ts
+import { describe, it, expect } from 'vitest';
+
+describe('Example', () => {
+  it('should work', () => {
+    expect(true).toBe(true);
+  });
+});
+```
+
+### Fixtures Playwright
+
+```typescript
+// playwright-fixture.ts
+import { test as base } from '@playwright/test';
+
+export const test = base.extend({
+  // Custom fixtures here
+});
+```
+
+---
+
+## ⚙️ Configuration
+
+### Vite (src/vite.config.ts)
+
+```typescript
+{
+  server: {
+    host: '::',        // IPv6 support
+    port: 8080,        // Port développement
+    hmr: {
+      overlay: false   // Erreurs HMR sans popup
+    }
+  },
+  resolve: {
+    alias: {
+      '@': './src'     // Path alias @/
+    }
+  }
+}
+```
+
+### TypeScript (tsconfig.json)
+
+- **Target** : ES2020
+- **Module** : ESNext (Vite gère la bundling)
+- **Strict mode** : Activé
+- **Path aliases** : `@/*` → `src/*`
+
+### TailwindCSS (tailwind.config.js)
+
+- **Content scanning** : `src/**/*.tsx`
+- **Extends** : Couleurs custom, espacements
+- **Plugins** : `@tailwindcss/typography`, animations
+
+### ESLint (eslint.config.js)
+
+Configuration ESLint 9 (flat config) :
+- Règles JavaScript modernes
+- Support TypeScript
+- Recommandations React
+
+```bash
+npm run lint  # Vérifie tout
+```
+
+---
+
+## ⚠️ Problèmes Connus & À Corriger
+
+### 🔴 CRITIQUE - App.tsx (ligne 23)
+
+**Erreur** : `useAdminAuth` utilisé comme JSX component
+```typescript
+// ❌ MAUVAIS
+<useAdminAuth>
+```
+
+**Correction** : Utiliser le Provider
+```typescript
+// ✅ BON
+import { AdminAuthProvider } from '@/context/AdminAuthContext';
+
+<AdminAuthProvider>
+  <QueryClientProvider>
+    ...
+  </QueryClientProvider>
+</AdminAuthProvider>
+```
+
+### 🔴 CRITIQUE - AdminDashboard.tsx (ligne 16)
+
+**Erreur** : Variable `isAdmin` non déclarée
+```typescript
+// ❌ MAUVAIS - Ligne 16
+const { isAdmin } = useAdminAuth();  // MANQUE
+
+useEffect(() => {
+  if (!isAdmin) {  // undefined!
+    navigate('/pos', { replace: true })
+  }
+}, [isAdmin, navigate]);
+```
+
+**Correction** : Ajouter le destructuring
+```typescript
+// ✅ BON
+const { isAdmin } = useAdminAuth();  // ← Ajouter cette ligne
+```
+
+### ⚠️ À Améliorer - AdminDashboard.tsx (ligne ~95)
+
+**Observation** : Le footer de la sidebar est vide
+```typescript
+// Ligne ~95
+<div className="p-4 border-t border-slate-800 space-y-2"></div>
+```
+
+**Suggestion** : Ajouter le bouton logout
+```typescript
+<div className="p-4 border-t border-slate-800 space-y-2">
+  <Button 
+    onClick={handleLogout}
+    variant="outline"
+    size="sm"
+    className="w-full gap-2"
+  >
+    <LogOut className="w-4 h-4" />
+    {sidebarOpen && 'Déconnexion'}
+  </Button>
+</div>
+```
+
+---
+
+## 🐛 Dépannage
+
+### "Connection refused" sur API
+
+**Symptôme** : Erreurs `ECONNREFUSED` quand vous cliquez sur un produit
+**Cause** : Backend Django pas en cours d'exécution
+**Solution** :
+```bash
+# Terminal 1: Frontend
+npm run dev
+
+# Terminal 2: Backend (projet Django)
+python manage.py runserver 0.0.0.0:8000
+```
+
+### Cart vide après rechargement
+
+**Symptôme** : Le panier se vide en rechargement page
+**Cause** : Mauvaise clé localStorage ou JSON invalide
+**Solution** :
+```javascript
+// Console browser
+localStorage.clear();
+localStorage.setItem('pos_cart', JSON.stringify([]));
+```
+
+### Mode hors-ligne non détecté
+
+**Symptôme** : `isOffline` toujours false
+**Cause** : Événement `online/offline` du navigateur non déclenché
+**Solution** : Basculer mode airplane ou déconnecter le WiFi
+
+### Admin Dashboard blanc/ne charge pas
+
+**Symptômes** : Page vide ou erreur
+**Cause** : Voir section "Problèmes Connus" ci-dessus (manque isAdmin)
+**Solution** : Appliquer les corrections du ticket CRITIQUE
+
+---
+
+## 📚 Ressources
+
+### Documentation Officielle
+- [React 18 Docs](https://react.dev)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Vite Guide](https://vitejs.dev)
+- [React Router v6](https://reactrouter.com)
+- [TailwindCSS](https://tailwindcss.com)
+- [shadcn/ui](https://ui.shadcn.com)
+- [React Query](https://tanstack.com/query/latest)
+- [Recharts](https://recharts.org)
+
+### Componentes & Patterns
+- [Radix UI Primitives](https://www.radix-ui.com) - Base shadcn/ui
+- [Lucide Icons](https://lucide.dev) - Icônes utilisées
+- [React Hook Form](https://react-hook-form.com) - Gestion formulaires
+- [Zod](https://zod.dev) - Validation schémas
+
+### Tutoriels & Guides
+- [Building Modern UIs with shadcn/ui](https://www.youtube.com/results?search_query=shadcn+ui+tutorial)
+- [React Query Best Practices](https://tanstack.com/query/latest/docs/react/overview)
+- [Tailwind CSS Tips & Tricks](https://tailwindcss.com/docs/customization)
+
+---
+
+## 📋 Prochaines Étapes Recommandées
+
+1. ✅ **Corriger les 2 bugs critiques** (voir section "Problèmes Connus")
+2. ✅ **Ajouter le logout button** dans la sidebar admin
+3. ✅ **Mettre en place l'authentification complète** (refresh tokens)
+4. 🧪 **Écrire des tests unitaires** pour les hooks
+5. 📱 **Optimiser responsive design** pour mobile
+6. 🎨 **Affiner le design** avec custom colors
+7. 📊 **Ajouter plus de graphiques** au dashboard
+8. 🔐 **Implémenter rate limiting** des API calls
+
+---
+
+**Dernière mise à jour** : 30 avril 2026 | **Auteur** : ENI L3 Team | **Status** : 🚧 En développement
 - **shadcn/ui** - Composants UI réutilisables et accessibles
 - **Sonner** - Notifications toast élégantes
 - **Lucide React** - Icônes SVG performantes
