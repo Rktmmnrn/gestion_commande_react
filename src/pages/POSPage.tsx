@@ -21,6 +21,7 @@ const SELECTED_TABLE_KEY = 'pos_selected_table';
 export default function POSPage() {
   const navigate = useNavigate();
   const { isOffline } = useOfflineMode();
+  const [modalOpen, setModalOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState<number | null>(() => {
     const stored = localStorage.getItem(SELECTED_TABLE_KEY);
     return stored ? parseInt(stored, 10) : null;
@@ -115,7 +116,7 @@ export default function POSPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate('/admin')}
+          onClick={() => setModalOpen(true)}
           className="gap-2 border-slate-600 text-slate-300 hover:text-white hover:border-slate-400"
         >
           <Settings className="h-4 w-4" />
@@ -147,6 +148,11 @@ export default function POSPage() {
           />
         </aside>
       </div>
+
+      <AdminPasswordModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </>
   );
 }

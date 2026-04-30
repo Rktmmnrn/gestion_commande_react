@@ -2,9 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { useAdminAuth } from '@/context/AdminAuthContext';
+import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
-
 import LandingPage from '@/pages/LandingPage';
 import POSPage from '@/pages/POSPage';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
@@ -19,7 +18,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <ErrorBoundary>
-    <useAdminAuth>
+    <AdminAuthProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Sonner position="bottom-center" closeButton />
@@ -46,7 +45,7 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
-    </useAdminAuth>
+    </AdminAuthProvider>
   </ErrorBoundary>
 );
 

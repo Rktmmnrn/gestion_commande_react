@@ -1,15 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 // import { Badge } from '@/components/ui/badge';
-import { LayoutGrid, UtensilsCrossed, ClipboardList, ChevronLeft, BarChart3, FileText, LogOut } from 'lucide-react';
+import { LayoutGrid, UtensilsCrossed, ClipboardList,
+  ChevronLeft, BarChart3, FileText, LogOut } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { logout } = useAdminAuth();
+  const { logout, isAdmin } = useAdminAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  useEffect(() => {
+    if (!isAdmin) {
+      navigate('/pos', { replace: true });
+    }
+  }, [isAdmin, navigate]);
+  if (!isAdmin) return null;
 
   const handleLogout = () => {
     logout();
