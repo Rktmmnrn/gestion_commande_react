@@ -10,9 +10,30 @@ interface AdminAuthContextType {
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
+// Vérifie si un token JWT est encore valide
+function isTokenValid(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp && payload.exp > now;
+  } catch {
+    return false;
+  }
+}
+
+function getStoredToken(): string | null {
+  const token = localStorage.getItem('admin_token');
+  if (!token) return null;
+  if (!isTokenValid(token)) {
+    localStorage.removeItem('admin_token');
+    return null;
+  }
+  return token;
+}
+
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(
-    () => localStorage.getItem('admin_token')
+    () => getStoredToken()
   );
 
   const login = useCallback(async (password: string) => {
