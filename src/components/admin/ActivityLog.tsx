@@ -1,37 +1,20 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  flexRender,
-  ColumnDef,
-  SortingState,
-  ColumnFiltersState,
-} from '@tanstack/react-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorMessage } from '@/components/ErrorMessage';
-import { Search, Calendar } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import apiClient from '@/api/client';
 
-// Types
 interface ActivityLog {
   id: number;
   timestamp: string;
@@ -39,23 +22,20 @@ interface ActivityLog {
   action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT';
   entity: 'Order' | 'Product' | 'Category' | 'User';
   entityId: number;
-  oldValue?: string;
   newValue?: string;
-  ipAddress?: string;
 }
 
-// 🔄 Récupérer les logs d'activité depuis l'API
 const fetchActivityLogs = async (): Promise<ActivityLog[]> => {
   try {
-    // Récupérer les commandes (avec timestamps et audit info)
-    const { data: orders } = await apiClient.get<any[]>('orders/');
-    
-    // Construire les logs à partir de l'historique
+    const [ordersRes, productsRes] = await Promise.all([
+      apiClient.get<any[]>('orders/'),
+      apiClient.get<any[]>('products/'),
+    ]);
+
     const logs: ActivityLog[] = [];
     let id = 1;
-    
-    // Ajouter changemènts de statut des commandes
-    orders?.forEach((order: any) => {
+
+    (ordersRes.data || []).forEach((order: any) => {
       if (order.created_at) {
         logs.push({
           id: id++,
@@ -67,7 +47,6 @@ const fetchActivityLogs = async (): Promise<ActivityLog[]> => {
           newValue: `Commande créée table ${order.table_number}`,
         });
       }
-      
       if (order.updated_at && order.updated_at !== order.created_at) {
         logs.push({
           id: id++,
@@ -80,11 +59,8 @@ const fetchActivityLogs = async (): Promise<ActivityLog[]> => {
         });
       }
     });
-    
-    // Récupérer les produits
-    const { data: products } = await apiClient.get<any[]>('products/');
-    
-    products?.forEach((product: any) => {
+
+    (productsRes.data || []).forEach((product: any) => {
       if (product.created_at) {
         logs.push({
           id: id++,
@@ -96,162 +72,87 @@ const fetchActivityLogs = async (): Promise<ActivityLog[]> => {
           newValue: `Produit créé: ${product.name}`,
         });
       }
-      
-      if (product.updated_at && product.updated_at !== product.created_at) {
-        logs.push({
-          id: id++,
-          timestamp: product.updated_at,
-          user: product.updated_by_info?.username || 'N/A',
-          action: 'UPDATE',
-          entity: 'Product',
-          entityId: product.id,
-          newValue: `Produit modifié: ${product.name}`,
-        });
-      }
     });
-    
-    // Trier par date décroissante
+
     logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     return logs;
-  } catch (error) {
-    console.error('Erreur lors de la récupération des logs:', error);
+  } catch {
     return [];
   }
 };
 
-const getActionColor = (action: ActivityLog['action']) => {
-  switch (action) {
-    case 'CREATE': return 'bg-green-100 text-green-800';
-    case 'UPDATE': return 'bg-blue-100 text-blue-800';
-    case 'DELETE': return 'bg-red-100 text-red-800';
-    case 'LOGIN': return 'bg-purple-100 text-purple-800';
-    case 'LOGOUT': return 'bg-gray-100 text-gray-800';
-    default: return 'bg-gray-100 text-gray-800';
-  }
+const ACTION_COLOR: Record<string, string> = {
+  CREATE: 'bg-green-100 text-green-800',
+  UPDATE: 'bg-blue-100 text-blue-800',
+  DELETE: 'bg-red-100 text-red-800',
+  LOGIN: 'bg-purple-100 text-purple-800',
+  LOGOUT: 'bg-gray-100 text-gray-800',
 };
 
-const getActionLabel = (action: ActivityLog['action']) => {
-  switch (action) {
-    case 'CREATE': return 'Création';
-    case 'UPDATE': return 'Modification';
-    case 'DELETE': return 'Suppression';
-    case 'LOGIN': return 'Connexion';
-    case 'LOGOUT': return 'Déconnexion';
-    default: return action;
-  }
+const ACTION_LABEL: Record<string, string> = {
+  CREATE: 'Création',
+  UPDATE: 'Modification',
+  DELETE: 'Suppression',
+  LOGIN: 'Connexion',
+  LOGOUT: 'Déconnexion',
 };
+
+const PAGE_SIZE = 10;
 
 export function ActivityLog() {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
-  const [actionFilter, setActionFilter] = useState<string>('all');
-  const [entityFilter, setEntityFilter] = useState<string>('all');
+  const [search, setSearch] = useState('');
+  const [actionFilter, setActionFilter] = useState('all');
+  const [entityFilter, setEntityFilter] = useState('all');
+  const [page, setPage] = useState(0);
 
   const { data: logs, isLoading, error } = useQuery({
     queryKey: ['activity-logs'],
     queryFn: fetchActivityLogs,
   });
 
-  const filteredLogs = logs?.filter(log =>
-    (actionFilter === 'all' || log.action === actionFilter) &&
-    (entityFilter === 'all' || log.entity === entityFilter)
-  ) || [];
+  // Filtrage 100% côté JS — pas de react-table
+  const filtered = useMemo(() => {
+    if (!logs) return [];
+    const q = search.toLowerCase().trim();
+    return logs.filter((log) => {
+      const matchAction = actionFilter === 'all' || log.action === actionFilter;
+      const matchEntity = entityFilter === 'all' || log.entity === entityFilter;
+      const matchSearch = !q || (
+        String(log.entityId).includes(q) ||
+        log.user.toLowerCase().includes(q) ||
+        (log.newValue || '').toLowerCase().includes(q) ||
+        ACTION_LABEL[log.action].toLowerCase().includes(q) ||
+        log.entity.toLowerCase().includes(q)
+      );
+      return matchAction && matchEntity && matchSearch;
+    });
+  }, [logs, search, actionFilter, entityFilter]);
 
-  const columns: ColumnDef<ActivityLog>[] = [
-    {
-      accessorKey: 'timestamp',
-      header: 'Date/Heure',
-      size: 150,
-      cell: ({ row }) => (
-        <span className="text-sm">
-          {format(new Date(row.original.timestamp), 'dd/MM/yyyy HH:mm', { locale: fr })}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'user',
-      header: 'Utilisateur',
-      size: 100,
-    },
-    {
-      accessorKey: 'action',
-      header: 'Action',
-      size: 120,
-      cell: ({ row }) => (
-        <Badge className={getActionColor(row.original.action)}>
-          {getActionLabel(row.original.action)}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: 'entity',
-      header: 'Entité',
-      size: 100,
-    },
-    {
-      accessorKey: 'entityId',
-      header: 'ID Entité',
-      size: 100,
-    },
-    {
-      id: 'changes',
-      header: 'Changements',
-      size: 200,
-      cell: ({ row }) => (
-        <div className="text-sm">
-          {row.original.oldValue && (
-            <div className="text-red-600 line-through">{row.original.oldValue}</div>
-          )}
-          {row.original.newValue && (
-            <div className="text-green-600">{row.original.newValue}</div>
-          )}
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'ipAddress',
-      header: 'IP Address',
-      size: 120,
-    },
-  ];
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const table = useReactTable({
-    data: filteredLogs,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      columnFilters,
-      globalFilter,
-    },
-  });
+  // Reset page quand les filtres changent
+  const handleActionFilter = (val: string) => { setActionFilter(val); setPage(0); };
+  const handleEntityFilter = (val: string) => { setEntityFilter(val); setPage(0); };
+  const handleSearch = (val: string) => { setSearch(val); setPage(0); };
 
   if (isLoading) return <LoadingSpinner />;
   if (error) return <ErrorMessage error={error as Error} />;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Journal d'Activité</h2>
-          <p className="text-muted-foreground">Historique des actions des utilisateurs</p>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold">Journal d'Activité</h2>
+        <p className="text-muted-foreground">Historique des actions des utilisateurs</p>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Activités</CardTitle>
-            <div className="flex gap-2">
-              <Select value={actionFilter} onValueChange={setActionFilter}>
-                <SelectTrigger className="w-40">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <CardTitle>Activités ({filtered.length})</CardTitle>
+            <div className="flex flex-wrap gap-2">
+              <Select value={actionFilter} onValueChange={handleActionFilter}>
+                <SelectTrigger className="w-44">
                   <SelectValue placeholder="Toutes les actions" />
                 </SelectTrigger>
                 <SelectContent>
@@ -263,8 +164,9 @@ export function ActivityLog() {
                   <SelectItem value="LOGOUT">Déconnexion</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={entityFilter} onValueChange={setEntityFilter}>
-                <SelectTrigger className="w-40">
+
+              <Select value={entityFilter} onValueChange={handleEntityFilter}>
+                <SelectTrigger className="w-44">
                   <SelectValue placeholder="Toutes les entités" />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,78 +177,85 @@ export function ActivityLog() {
                   <SelectItem value="User">Utilisateur</SelectItem>
                 </SelectContent>
               </Select>
+
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Rechercher..."
-                  value={globalFilter}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                  className="pl-9 w-64"
+                  value={search}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-9 w-56"
                 />
               </div>
             </div>
           </div>
         </CardHeader>
+
         <CardContent>
           <Table>
             <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
+              <TableRow>
+                <TableHead>Date/Heure</TableHead>
+                <TableHead>Utilisateur</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Entité</TableHead>
+                <TableHead>ID</TableHead>
+                <TableHead>Détail</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
+              {paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                     Aucune activité trouvée.
                   </TableCell>
                 </TableRow>
+              ) : (
+                paginated.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="text-sm">
+                      {format(new Date(log.timestamp), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                    </TableCell>
+                    <TableCell className="text-sm">{log.user}</TableCell>
+                    <TableCell>
+                      <Badge className={ACTION_COLOR[log.action]}>
+                        {ACTION_LABEL[log.action]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">{log.entity}</TableCell>
+                    <TableCell className="text-sm">#{log.entityId}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {log.newValue || '—'}
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
 
-          <div className="flex items-center justify-end space-x-2 py-4">
-            <div className="flex-1 text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} sur{' '}
-              {table.getFilteredRowModel().rows.length} activités.
-            </div>
-            <div className="space-x-2">
+          {totalPages > 1 && (
+            <div className="flex items-center justify-end gap-2 pt-4">
+              <span className="text-sm text-muted-foreground">
+                Page {page + 1} / {totalPages}
+              </span>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
               >
                 Précédent
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
               >
                 Suivant
               </Button>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
