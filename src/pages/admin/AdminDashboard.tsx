@@ -3,21 +3,24 @@ import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-// import { Badge } from '@/components/ui/badge';
 import { LayoutGrid, UtensilsCrossed, ClipboardList,
   ChevronLeft, BarChart3, FileText, LogOut } from 'lucide-react';
+
+
+function AdminRedirect() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate('/pos', { replace: true });
+  }, [navigate]);
+  return null;
+}
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { logout, isAdmin } = useAdminAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
-  useEffect(() => {
-    if (!isAdmin) {
-      navigate('/pos', { replace: true });
-    }
-  }, [isAdmin, navigate]);
-  if (!isAdmin) return null;
+
+  if (!isAdmin) return <AdminRedirect />;
 
   const handleLogout = () => {
     logout();
