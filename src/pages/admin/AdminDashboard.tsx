@@ -20,11 +20,11 @@ export default function AdminDashboard() {
   const { logout, isAdmin } = useAdminAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  useEffect(() => {
-    return () => {
-      logout();
-    };
-  }, [logout]);
+  // useEffect(() => {
+  //   return () => {
+  //     logout();
+  //   };
+  // }, [logout]);
 
   if (!isAdmin) return <AdminRedirect />;
 

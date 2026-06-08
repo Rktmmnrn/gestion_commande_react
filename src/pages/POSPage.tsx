@@ -117,7 +117,7 @@ export default function POSPage() {
           variant="outline"
           size="sm"
           onClick={() => setModalOpen(true)}
-          className="gap-2 border-slate-600 text-slate-300 hover:text-white hover:border-slate-400"
+          className="gap-2"
         >
           <Settings className="h-4 w-4" />
           Gestion

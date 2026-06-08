@@ -95,4 +95,14 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
+
+  .btn-nav-outline {
+    border: 0.5px solid hsl(var(--border));
+    color: hsl(var(--muted-foreground));
+  }
+
+  .btn-nav-outline:hover {
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--primary));
+  }
 }

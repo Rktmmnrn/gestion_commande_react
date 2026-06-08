@@ -39,7 +39,7 @@ export const deleteProductAsync = async (id: number): Promise<void> => {
 
 // ============= Orders =============
 export const updateOrderStatusAsync = async (id: number, status: OrderStatus): Promise<Order> =>
-  (await apiClient.patch<Order>(`orders/${id}/`, { status })).data;
+  (await apiClient.patch<Order>(`orders/${id}/status/`, { status })).data;
 
 export const deleteOrderAsync = async (id: number): Promise<void> => {
   await apiClient.delete(`orders/${id}/`);
