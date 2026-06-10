@@ -152,3 +152,18 @@ export const tableSchema = z.object({
   status: z.enum(['free', 'occuped']).default('free'),
 });
 export type TablePayload = z.infer<typeof tableSchema>;
+
+export const clientSchema = z.object({
+  nom: z.string().min(1, 'Nom requis'),
+  adresse: z.string().min(1, 'Adresse requise'),
+  telephone: z.string().min(1, 'Téléphone requis'),
+  email: z.string().email('Email invalide'),
+});
+export type ClientPayload = z.infer<typeof clientSchema>;
+
+export const reservationSchema = z.object({
+  date_heure: z.string().min(1, 'Date et heure requises'),
+  nb_personnes: z.coerce.number().int().positive("Nombre de personnes invalide"),
+  type_commande: z.enum(['on_site', 'online', 'take_away']).default('on_site'),
+});
+export type ReservationPayload = z.infer<typeof reservationSchema>;
