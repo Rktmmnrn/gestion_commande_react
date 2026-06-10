@@ -55,7 +55,10 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
           onUpdateCart([]);
           onClearCart?.();
         },
-        onError: () => toast.error('Erreur lors de la création'),
+        onError: (e) => {
+          toast.error('Erreur lors de la création');
+          console.error(e.message);
+        },
       }
     );
   };
