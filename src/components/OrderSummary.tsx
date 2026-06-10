@@ -27,7 +27,7 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
   const updateStatus = useUpdateOrderStatus();
 
   const activeOrder = Array.isArray(orders)? orders.find( // verification que order est bien un tableau
-    (o) => o.table_number === selectedTable && o.status !== 'delivered' && o.status !== 'cancelled'
+    (o) => o.table === selectedTable && o.status !== 'delivered' && o.status !== 'cancelled'
   ) : undefined;
 
   const total = cart.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);

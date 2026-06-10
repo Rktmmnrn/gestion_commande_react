@@ -27,7 +27,7 @@ export default function TableGrid({ selectedTable, onSelectTable }: TableGridPro
   if (Array.isArray(orders)) {
     orders?.forEach((o) => {
       if (o.status !== 'delivered' && o.status !== 'cancelled') {
-        tableOrders.set(o.table_number, o);
+        tableOrders.set(o.table, o);
       }
     });
   }

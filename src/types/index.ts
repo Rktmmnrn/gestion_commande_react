@@ -5,6 +5,33 @@ export interface Category {
   name: string;
 }
 
+export interface Table {
+  id: number;
+  number: number;
+  capacity: number;
+  status: 'free' | 'occuped';
+}
+
+export interface Client {
+  id: number;
+  nom: string;
+  adresse: string;
+  telephone: string;
+  email: string;
+}
+
+export interface Reservation {
+  id: number;
+  date_heure: string;
+  nb_personnes: number;
+  statut: 'waiting' | 'confirmed' | 'canceled';
+  type_commande: 'on_site' | 'online' | 'take_away';
+  confirm_client: boolean;
+  token_confirmation: string;
+  client: number;
+  table: number | null;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -27,7 +54,10 @@ export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'can
 
 export interface Order {
   id: number;
-  table_number: number;
+  table: number | null;
+  client: number | null;
+  reservation: number | null;
+  type_commande: 'on_site' | 'online' | 'take_away';
   status: OrderStatus;
   items: OrderItem[];
   total: number;
@@ -45,8 +75,18 @@ export const orderItemSchema = z.object({
 });
 
 export const createOrderSchema = z.object({
-  table_number: z.number().int().min(1, 'Numéro de table invalide').max(99, 'Numéro de table trop élevé'),
-  items: z.array(orderItemSchema).min(1, 'La commande doit contenir au moins un article'),
+  table: z.number().optional(),
+  client: z.number().optional(),
+  reservation: z.number().optional(),
+
+  type_commande: z.enum([
+    'on_site',
+    'online',
+    'take_away'
+  ]),
+
+  items: z.array(orderItemSchema)
+    .min(1, 'La commande doit contenir au moins un article'),
 });
 
 export const addItemSchema = z.object({
@@ -70,12 +110,27 @@ export const productSchema = z.object({
   available: z.boolean().default(true),
 });
 
-// Types infered from schemas
-export type CreateOrderPayload = z.infer<typeof createOrderSchema>;
-export type AddItemPayload = z.infer<typeof addItemSchema>;
-export type LoginPayload = z.infer<typeof loginSchema>;
-export type CategoryPayload = z.infer<typeof categorySchema>;
-export type ProductPayload = z.infer<typeof productSchema>;
+export const createClientSchema = z.object({
+  nom: z.string().min(1, 'Nom requis'),
+  adresse: z.string().min(1, 'Adresse requise'),
+  telephone: z.string().min(1, 'Téléphone requis'),
+  email: z.string().email('Email invalide'),
+});
+
+export const createReservationSchema = z.object({
+  date_heure: z.string(),
+  nb_personnes: z.number().int().positive(),
+
+  type_commande: z.enum([
+    'on_site',
+    'online',
+    'take_away'
+  ]),
+
+  client: z.number(),
+
+  table: z.number().optional(),
+});
 
 export interface AuthTokens {
   access: string;
@@ -88,3 +143,12 @@ export interface AuthUser {
   is_staff: boolean;
   is_superuser: boolean;
 }
+
+// Types infered from schemas
+export type CreateOrderPayload = z.infer<typeof createOrderSchema>;
+export type CreateClientPayload = z.infer<typeof createClientSchema>;
+export type CreateReservationPayload = z.infer<typeof createReservationSchema>;
+export type AddItemPayload = z.infer<typeof addItemSchema>;
+export type LoginPayload = z.infer<typeof loginSchema>;
+export type CategoryPayload = z.infer<typeof categorySchema>;
+export type ProductPayload = z.infer<typeof productSchema>;
