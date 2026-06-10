@@ -3,7 +3,8 @@ import type { Order } from '@/types';
 import { useOrders } from '@/hooks/useOrders';
 import { Utensils } from 'lucide-react';
 
-const TABLES = Array.from({ length: 12 }, (_, i) => i + 1);
+const TABLE_COUNT = parseInt(import.meta.env.VITE_TABLE_COUNT || '12');
+const TABLES = Array.from({ length: TABLE_COUNT }, (_, i) => i + 1);
 
 interface TableGridProps {
   selectedTable: number | null;

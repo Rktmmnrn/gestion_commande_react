@@ -31,5 +31,5 @@
   },
   "include": [
     "src"
-  ]
+, "src/pages/admin/.OrdersAdmin.tsx", "src/components/charts/.BestSellersChart.tsx", "src/components/charts/.OrdersStatusChart.tsx", "src/components/charts/RevenueChart.tsx"  ]
 }
