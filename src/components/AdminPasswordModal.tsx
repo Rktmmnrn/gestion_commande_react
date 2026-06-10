@@ -76,7 +76,7 @@ export default function AdminPasswordModal({ open, onClose }: AdminPasswordModal
             <DialogTitle className="text-lg">Espace administration</DialogTitle>
           </div>
           <DialogDescription>
-            Entrez le mot de passe administrateur pour accéder à la gestion.
+            Entrez le mot de passe administrateur pour accéder à l'espace Admin.
           </DialogDescription>
         </DialogHeader>
 

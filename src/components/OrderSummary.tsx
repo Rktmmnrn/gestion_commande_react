@@ -34,6 +34,7 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
 
   const handleRemove = (productId: number) => {
     onUpdateCart(cart.filter((i) => i.product.id !== productId));
+    toast.success('Commande supprimée du panier');
   };
 
   const handleQuantity = (productId: number, delta: number) => {
