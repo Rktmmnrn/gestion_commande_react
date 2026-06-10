@@ -20,6 +20,7 @@ interface AdminPasswordModalProps {
 export default function AdminPasswordModal({ open, onClose }: AdminPasswordModalProps) {
   const navigate = useNavigate();
   const { login } = useAdminAuth();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -29,6 +30,7 @@ export default function AdminPasswordModal({ open, onClose }: AdminPasswordModal
   // Focus auto sur le champ dès l'ouverture
   useEffect(() => {
     if (open) {
+      setUsername('');
       setPassword('');
       setError('');
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -37,8 +39,8 @@ export default function AdminPasswordModal({ open, onClose }: AdminPasswordModal
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password.trim()) {
-      setError('Veuillez entrer le mot de passe.');
+    if (!username.trim() || !password.trim()) {
+      setError('Veuillez renseigner le nom d\'utilisateur et le mot de passe.');
       return;
     }
 
@@ -46,11 +48,12 @@ export default function AdminPasswordModal({ open, onClose }: AdminPasswordModal
     setError('');
 
     try {
-      await login(password);
+      await login(username, password);
       onClose();
       navigate('/admin/dashboard');
     } catch {
-      setError('Mot de passe incorrect.');
+      setError('Identifiants incorrects.');
+      setUsername('');
       setPassword('');
       inputRef.current?.focus();
     } finally {
@@ -60,6 +63,7 @@ export default function AdminPasswordModal({ open, onClose }: AdminPasswordModal
 
   const handleClose = () => {
     if (isLoading) return;
+    setUsername('');
     setPassword('');
     setError('');
     onClose();
@@ -76,14 +80,27 @@ export default function AdminPasswordModal({ open, onClose }: AdminPasswordModal
             <DialogTitle className="text-lg">Espace administration</DialogTitle>
           </div>
           <DialogDescription>
-            Entrez le mot de passe administrateur pour accéder à l'espace Admin.
+            Entrez vos identifiants administrateur pour accéder à l'espace Admin.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          <div className="relative">
+          <div>
             <Input
               ref={inputRef}
+              type="text"
+              placeholder="Nom d'utilisateur"
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (error) setError('');
+              }}
+              disabled={isLoading}
+              className={error ? 'border-destructive focus-visible:ring-destructive' : ''}
+            />
+          </div>
+          <div className="relative">
+            <Input
               type={showPassword ? 'text' : 'password'}
               placeholder="Mot de passe"
               value={password}
@@ -124,7 +141,7 @@ export default function AdminPasswordModal({ open, onClose }: AdminPasswordModal
             <Button
               type="submit"
               className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold"
-              disabled={isLoading || !password.trim()}
+              disabled={isLoading || !username.trim() || !password.trim()}
             >
               {isLoading
                 ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Vérification...</>

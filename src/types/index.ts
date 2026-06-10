@@ -78,15 +78,8 @@ export const createOrderSchema = z.object({
   table: z.number().optional(),
   client: z.number().optional(),
   reservation: z.number().optional(),
-
-  type_commande: z.enum([
-    'on_site',
-    'online',
-    'take_away'
-  ]),
-
-  items: z.array(orderItemSchema)
-    .min(1, 'La commande doit contenir au moins un article'),
+  type_commande: z.enum(['on_site', 'online', 'take_away']),
+  items: z.array(orderItemSchema).min(1, 'La commande doit contenir au moins un article'),
 });
 
 export const addItemSchema = z.object({
@@ -152,3 +145,10 @@ export type AddItemPayload = z.infer<typeof addItemSchema>;
 export type LoginPayload = z.infer<typeof loginSchema>;
 export type CategoryPayload = z.infer<typeof categorySchema>;
 export type ProductPayload = z.infer<typeof productSchema>;
+
+export const tableSchema = z.object({
+  number: z.coerce.number().int().positive("Le numéro doit être un entier positif"),
+  capacity: z.coerce.number().int().positive("La capacité doit être d'au moins 1 personne"),
+  status: z.enum(['free', 'occuped']).default('free'),
+});
+export type TablePayload = z.infer<typeof tableSchema>;

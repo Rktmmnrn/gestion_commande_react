@@ -17,12 +17,6 @@ export interface AdminStats {
     average: number;
     trend: number;
   };
-  activeUsers: {
-    count: number;
-    lastActivity: string;
-    adminCount: number;
-    waiterCount: number;
-  };
 }
 
 export interface RevenueData {
@@ -60,13 +54,13 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const fetchAdminStats = async (): Promise<AdminStats> => {
-  const [ordersRes, usersRes] = await Promise.all([
+  const [ordersRes, tablesRes] = await Promise.all([
     apiClient.get<any[]>('orders/'),
-    apiClient.get<any[]>('users/').catch(() => ({ data: [] })),
+    apiClient.get<any[]>('tables/'),
   ]);
 
   const orders: any[] = ordersRes.data || [];
-  const users: any[] = usersRes.data || [];
+  const tables: any[] = tablesRes.data || [];
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -78,19 +72,18 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
 
   const todayRevenue = todaysOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
+  // Utilise o.table (ID FK retourné par Django) au lieu de o.table_number
   const activeTables = new Set(
     orders
       .filter((o) => o.status !== 'delivered' && o.status !== 'cancelled')
-      .map((o) => o.table_number)
+      .map((o) => o.table)
+      .filter((t) => t !== null && t !== undefined)
   );
 
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const monthOrders = orders.filter((o) => new Date(o.created_at) >= monthStart);
   const monthRevenue = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
   const avgPerOrder = monthOrders.length > 0 ? monthRevenue / monthOrders.length : 0;
-
-  const adminCount = users.filter((u) => u.role === 'admin' || u.is_staff).length;
-  const waiterCount = users.filter((u) => u.role === 'waiter' && !u.is_staff).length;
 
   return {
     ordersToday: {
@@ -100,19 +93,13 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     },
     tablesOccupied: {
       occupied: activeTables.size,
-      total: 12,
+      total: tables.length, // nombre réel de tables depuis l'API
       trend: 0,
     },
     monthlyRevenue: {
       amount: monthRevenue,
       average: avgPerOrder,
       trend: 0,
-    },
-    activeUsers: {
-      count: users.length,
-      lastActivity: 'maintenant',
-      adminCount,
-      waiterCount,
     },
   };
 };

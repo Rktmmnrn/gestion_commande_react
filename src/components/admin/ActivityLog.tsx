@@ -27,49 +27,33 @@ interface ActivityLog {
 
 const fetchActivityLogs = async (): Promise<ActivityLog[]> => {
   try {
-    const [ordersRes, productsRes] = await Promise.all([
-      apiClient.get<any[]>('orders/'),
-      apiClient.get<any[]>('products/'),
-    ]);
+    const ordersRes = await apiClient.get<any[]>('orders/');
 
     const logs: ActivityLog[] = [];
     let id = 1;
 
     (ordersRes.data || []).forEach((order: any) => {
       if (order.created_at) {
+        const tableInfo = order.table ? `table ${order.table}` : order.type_commande === 'take_away' ? 'à emporter' : 'en ligne';
         logs.push({
           id: id++,
           timestamp: order.created_at,
-          user: order.created_by_info?.username || 'N/A',
+          user: 'N/A',
           action: 'CREATE',
           entity: 'Order',
           entityId: order.id,
-          newValue: `Commande créée table ${order.table_number}`,
+          newValue: `Commande créée — ${tableInfo}`,
         });
       }
       if (order.updated_at && order.updated_at !== order.created_at) {
         logs.push({
           id: id++,
           timestamp: order.updated_at,
-          user: order.updated_by_info?.username || 'N/A',
+          user: 'N/A',
           action: 'UPDATE',
           entity: 'Order',
           entityId: order.id,
           newValue: `Statut: ${order.status}`,
-        });
-      }
-    });
-
-    (productsRes.data || []).forEach((product: any) => {
-      if (product.created_at) {
-        logs.push({
-          id: id++,
-          timestamp: product.created_at,
-          user: product.created_by_info?.username || 'N/A',
-          action: 'CREATE',
-          entity: 'Product',
-          entityId: product.id,
-          newValue: `Produit créé: ${product.name}`,
         });
       }
     });

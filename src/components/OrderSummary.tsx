@@ -1,4 +1,5 @@
-import type { Product } from '@/types';
+import { useState } from 'react';
+import type { Product, Table } from '@/types';
 import { useCreateOrder, useUpdateOrderStatus, useOrders } from '@/hooks/useOrders';
 import { Trash2, Send, ChefHat, Check } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,7 +10,7 @@ interface CartItem {
 }
 
 interface OrderSummaryProps {
-  selectedTable: number | null;
+  selectedTable: Table | null;
   cart: CartItem[];
   onUpdateCart: (cart: CartItem[]) => void;
   onClearCart?: () => void;
@@ -21,16 +22,27 @@ const STATUS_FLOW: Record<string, { next: string; label: string; icon: React.Rea
   ready: { next: 'delivered', label: 'Livré', icon: <Check className="h-4 w-4" /> },
 };
 
+type OrderType = 'on_site' | 'online' | 'take_away';
+
 export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClearCart }: OrderSummaryProps) {
   const { data: orders, isLoading: ordersLoading } = useOrders();
   const createOrder = useCreateOrder();
   const updateStatus = useUpdateOrderStatus();
+  const [orderType, setOrderType] = useState<OrderType>('on_site');
 
   const activeOrder = Array.isArray(orders)? orders.find( // verification que order est bien un tableau
-    (o) => o.table === selectedTable && o.status !== 'delivered' && o.status !== 'cancelled'
+    (o) => o.table === selectedTable?.id && o.status !== 'delivered' && o.status !== 'cancelled'
   ) : undefined;
 
   const total = cart.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);
+
+  const headerTitle = orderType === 'take_away'
+    ? 'À emporter'
+    : orderType === 'online'
+      ? 'En ligne'
+      : selectedTable
+        ? `Table ${selectedTable.number}`
+        : 'Sélectionnez une table';
 
   const handleRemove = (productId: number) => {
     onUpdateCart(cart.filter((i) => i.product.id !== productId));
@@ -46,9 +58,9 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
   };
 
   const handleSubmit = () => {
-    if (!selectedTable || cart.length === 0) return;
+    if ((orderType === 'on_site' && !selectedTable) || cart.length === 0) return;
     createOrder.mutate(
-      { table_number: selectedTable, items: cart.map((i) => ({ product: i.product.id, quantity: i.quantity })) },
+      { table: selectedTable?.id, type_commande: orderType, items: cart.map((i) => ({ product: i.product.id, quantity: i.quantity })) },
       {
         onSuccess: () => {
           toast.success('Commande créée');
@@ -81,7 +93,7 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
       <div className="flex flex-col h-full bg-card border-l border-border">
         <div className="p-4 border-b border-border">
           <h2 className="text-sm font-semibold text-foreground">
-            {selectedTable ? `Table ${selectedTable}` : 'Sélectionnez une table'}
+            {headerTitle}
           </h2>
         </div>
         <div className="flex-1 flex items-center justify-center">
@@ -95,7 +107,7 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
     <div className="flex flex-col h-full bg-card border-l border-border">
       <div className="p-4 border-b border-border">
         <h2 className="text-sm font-semibold text-foreground">
-          {selectedTable ? `Table ${selectedTable}` : 'Sélectionnez une table'}
+          {headerTitle}
         </h2>
         {activeOrder && (
           <span className="text-xs text-primary capitalize font-medium">
@@ -121,6 +133,27 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
       )}
 
       <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setOrderType('on_site')}
+            className={`px-3 py-1 rounded-full text-xs font-medium ${orderType === 'on_site' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+          >
+            Sur place
+          </button>
+          <button
+            onClick={() => setOrderType('take_away')}
+            className={`px-3 py-1 rounded-full text-xs font-medium ${orderType === 'take_away' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+          >
+            À emporter
+          </button>
+          <button
+            onClick={() => setOrderType('online')}
+            className={`px-3 py-1 rounded-full text-xs font-medium ${orderType === 'online' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+          >
+            En ligne
+          </button>
+        </div>
+
         {cart.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center mt-8">Ajoutez des plats depuis le menu</p>
         ) : (
@@ -154,7 +187,7 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
             </div>
             <button
               onClick={handleSubmit}
-              disabled={!selectedTable || createOrder.isPending}
+              disabled={(orderType === 'on_site' && !selectedTable) || createOrder.isPending}
               className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               <Send className="h-4 w-4" />

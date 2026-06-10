@@ -6,7 +6,7 @@ import OrderSummary from '@/components/OrderSummary';
 import AdminPasswordModal from '@/components/AdminPasswordModal';
 import { useOfflineMode } from '@/hooks/useOfflineMode';
 import { Button } from '@/components/ui/button';
-import type { Product } from '@/types';
+import type { Product, Table } from '@/types';
 import { toast } from 'sonner'
 import { WifiOff, Settings } from 'lucide-react';
 
@@ -22,9 +22,17 @@ export default function POSPage() {
   const navigate = useNavigate();
   const { isOffline } = useOfflineMode();
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<number | null>(() => {
+  const [selectedTable, setSelectedTable] = useState<Table | null>(() => {
     const stored = localStorage.getItem(SELECTED_TABLE_KEY);
-    return stored ? parseInt(stored, 10) : null;
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to parse selected table from localStorage:', e);
+        return null;
+      }
+    }
+    return null;
   });
   const [cart, setCart] = useState<CartItem[]>(() => {
     const stored = localStorage.getItem(CART_STORAGE_KEY);
@@ -46,7 +54,7 @@ export default function POSPage() {
   // Save selected table to localStorage
   useEffect(() => {
     if (selectedTable !== null) {
-      localStorage.setItem(SELECTED_TABLE_KEY, selectedTable.toString());
+      localStorage.setItem(SELECTED_TABLE_KEY, JSON.stringify(selectedTable));
     } else {
       localStorage.removeItem(SELECTED_TABLE_KEY);
     }
@@ -90,7 +98,7 @@ export default function POSPage() {
     toast.info('Panier vidé');
   }, []);
 
-  const handleTableSelect = useCallback((table: number) => {
+  const handleTableSelect = useCallback((table: Table) => {
     setSelectedTable(table);
   }, []);
 

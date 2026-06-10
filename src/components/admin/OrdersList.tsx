@@ -31,11 +31,11 @@ interface OrderItem {
 
 interface Order {
   id: number;
-  table_number: number;
+  table: number | null;  // ID FK retourné par Django (pas table_number)
   status: OrderStatus;
   total: number;
+  type_commande: 'on_site' | 'online' | 'take_away';
   created_at: string;
-  created_by_info?: { username: string };
   items: OrderItem[];
 }
 
@@ -101,8 +101,7 @@ export function OrdersList() {
       const matchSearch =
         !q ||
         String(o.id).includes(q) ||
-        String(o.table_number).includes(q) ||
-        (o.created_by_info?.username ?? '').toLowerCase().includes(q) ||
+        (o.table ? String(o.table).includes(q) : false) ||
         STATUS_LABEL[o.status].toLowerCase().includes(q);
       return matchStatus && matchSearch;
     });
@@ -157,10 +156,10 @@ export function OrdersList() {
               <TableRow>
                 <TableHead>N° commande</TableHead>
                 <TableHead>Table</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Articles</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Statut</TableHead>
-                <TableHead>Serveur</TableHead>
                 <TableHead>Créée le</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -176,7 +175,12 @@ export function OrdersList() {
                 paginated.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">#{order.id}</TableCell>
-                    <TableCell>Table {order.table_number}</TableCell>
+                    <TableCell>{order.table ? `Table ${order.table}` : '—'}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground capitalize">
+                      {order.type_commande === 'on_site' ? 'Sur place'
+                        : order.type_commande === 'take_away' ? 'À emporter'
+                        : 'En ligne'}
+                    </TableCell>
                     <TableCell>{order.items?.length ?? 0}</TableCell>
                     <TableCell className="font-medium">{order.total?.toFixed(2)} €</TableCell>
                     <TableCell>
@@ -184,7 +188,6 @@ export function OrdersList() {
                         {STATUS_LABEL[order.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell>{order.created_by_info?.username ?? 'N/A'}</TableCell>
                     <TableCell className="text-sm">
                       {order.created_at
                         ? format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })
@@ -221,7 +224,13 @@ export function OrdersList() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Commande #{selectedOrder?.id}</DialogTitle>
-            <DialogDescription>Table {selectedOrder?.table_number}</DialogDescription>
+            <DialogDescription>
+              {selectedOrder?.table ? `Table ${selectedOrder.table}` : '—'}
+              {' — '}
+              {selectedOrder?.type_commande === 'on_site' ? 'Sur place'
+                : selectedOrder?.type_commande === 'take_away' ? 'À emporter'
+                : 'En ligne'}
+            </DialogDescription>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4">
@@ -233,8 +242,12 @@ export function OrdersList() {
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Serveur</p>
-                  <p className="font-medium">{selectedOrder.created_by_info?.username ?? 'N/A'}</p>
+                  <p className="text-muted-foreground">Type</p>
+                  <p className="font-medium">
+                    {selectedOrder.type_commande === 'on_site' ? 'Sur place'
+                      : selectedOrder.type_commande === 'take_away' ? 'À emporter'
+                      : 'En ligne'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Créée le</p>

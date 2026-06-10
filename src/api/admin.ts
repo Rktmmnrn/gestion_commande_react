@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { Category, Product, Order, OrderStatus } from '@/types';
+import type { Category, Product, Order, OrderStatus, Table } from '@/types';
 
 // ============= Categories =============
 export const createCategoryAsync = async (data: { name: string }): Promise<Category> =>
@@ -43,4 +43,24 @@ export const updateOrderStatusAsync = async (id: number, status: OrderStatus): P
 
 export const deleteOrderAsync = async (id: number): Promise<void> => {
   await apiClient.delete(`orders/${id}/`);
+};
+
+// ============= Tables =============
+export const createTableAsync = async (data: {
+  number: number;
+  capacity: number;
+  status: 'free' | 'occuped';
+}): Promise<Table> => (await apiClient.post<Table>('tables/', data)).data;
+
+export const updateTableAsync = async (
+  id: number,
+  data: {
+    number: number;
+    capacity: number;
+    status: 'free' | 'occuped';
+  }
+): Promise<Table> => (await apiClient.put<Table>(`tables/${id}/`, data)).data;
+
+export const deleteTableAsync = async (id: number): Promise<void> => {
+  await apiClient.delete(`tables/${id}/`);
 };

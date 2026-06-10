@@ -3,7 +3,7 @@ import { KPICard } from './KPICard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { useAdminStats, useRevenueData, useBestSellers, useOrderStatusData } from '@/hooks/useAdminStats';
-import { ShoppingCart, Users, DollarSign, Table } from 'lucide-react';
+import { ShoppingCart, DollarSign, Table } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -162,7 +162,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <KPICard
           title="Commandes aujourd'hui"
           value={kpis?.ordersToday.count ?? 0}
@@ -173,8 +173,8 @@ export function Dashboard() {
         />
         <KPICard
           title="Tables occupées"
-          value={`${kpis?.tablesOccupied.occupied ?? 0}/${kpis?.tablesOccupied.total ?? 12}`}
-          subtitle={`${Math.round(((kpis?.tablesOccupied.occupied ?? 0) / (kpis?.tablesOccupied.total ?? 12)) * 100)} % d'occupation`}
+          value={`${kpis?.tablesOccupied.occupied ?? 0}/${kpis?.tablesOccupied.total ?? 0}`}
+          subtitle={`${kpis?.tablesOccupied.total ? Math.round(((kpis?.tablesOccupied.occupied ?? 0) / kpis.tablesOccupied.total) * 100) : 0} % d'occupation`}
           trend={{ value: kpis?.tablesOccupied.trend ?? 0, label: 'vs hier' }}
           icon={<Table className="w-4 h-4" />}
           color="warning"
@@ -186,13 +186,6 @@ export function Dashboard() {
           trend={{ value: kpis?.monthlyRevenue.trend ?? 0, label: 'vs mois dernier' }}
           icon={<DollarSign className="w-4 h-4" />}
           color="success"
-        />
-        <KPICard
-          title="Utilisateurs"
-          value={kpis?.activeUsers.count ?? 0}
-          subtitle={`${kpis?.activeUsers.adminCount ?? 0} admin, ${kpis?.activeUsers.waiterCount ?? 0} serveurs`}
-          icon={<Users className="w-4 h-4" />}
-          color="info"
         />
       </div>
 

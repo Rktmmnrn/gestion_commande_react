@@ -4,7 +4,7 @@ import apiClient from '@/api/client';
 interface AdminAuthContextType {
   isAdmin: boolean;
   accessToken: string | null;
-  login: (password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -36,9 +36,9 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     () => getStoredToken()
   );
 
-  const login = useCallback(async (password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     const { data } = await apiClient.post('token/', {
-      username: 'admin',
+      username,
       password,
     });
     localStorage.setItem('admin_token', data.access);

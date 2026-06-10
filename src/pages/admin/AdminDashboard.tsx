@@ -4,7 +4,7 @@ import { useAdminAuth } from '@/context/AdminAuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LayoutGrid, UtensilsCrossed, ClipboardList,
-  ChevronLeft, BarChart3, FileText, LogOut } from 'lucide-react';
+  ChevronLeft, BarChart3, FileText, LogOut, Armchair } from 'lucide-react';
 
 
 function AdminRedirect() {
@@ -37,6 +37,7 @@ export default function AdminDashboard() {
     { label: 'Tableau de bord', icon: BarChart3, path: '/admin/dashboard' },
     { label: 'Catégories', icon: LayoutGrid, path: '/admin/categories' },
     { label: 'Produits', icon: UtensilsCrossed, path: '/admin/products' },
+    { label: 'Tables', icon: Armchair, path: '/admin/tables' },
     { label: 'Commandes', icon: ClipboardList, path: '/admin/orders' },
     { label: 'Logs', icon: FileText, path: '/admin/logs' },
   ];

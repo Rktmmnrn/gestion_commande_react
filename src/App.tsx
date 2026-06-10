@@ -10,6 +10,7 @@ import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
 import CategoriesAdmin from '@/pages/admin/CategoriesAdmin';
 import ProductsAdmin from '@/pages/admin/ProductsAdmin';
+import TablesAdmin from '@/pages/admin/TablesAdmin';
 import OrdersListPage from '@/pages/admin/OrdersListPage';
 import ActivityLogPage from '@/pages/admin/ActivityLogPage';
 import NotFound from '@/pages/NotFound';
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="dashboard" element={<AdminDashboardPage />} />
                 <Route path="categories" element={<CategoriesAdmin />} />
                 <Route path="products" element={<ProductsAdmin />} />
+                <Route path="tables" element={<TablesAdmin />} />
                 <Route path="orders" element={<OrdersListPage />} />
                 <Route path="logs" element={<ActivityLogPage />} />
               </Route>

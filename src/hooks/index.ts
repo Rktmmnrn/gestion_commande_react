@@ -4,7 +4,7 @@ export {
   useOrders,
   useCreateOrder,
   useUpdateOrderStatus,
-  useAddOrderItem,
+  // useAddOrderItem,
 } from './useOrders';
 export {
   useAdminStats,
@@ -12,3 +12,5 @@ export {
   useBestSellers,
   useOrderStatusData,
 } from './useAdminStats';
+export { useTables } from './useTables';
+export { useClients } from './useClients';
