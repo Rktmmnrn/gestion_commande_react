@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import type { Product, Table } from '@/types';
 import { useCreateOrder, useUpdateOrderStatus, useOrders } from '@/hooks/useOrders';
-import { Trash2, Send, ChefHat, Check } from 'lucide-react';
+import { useReservations } from '@/hooks/useReservations';
+import { useClients } from '@/hooks/useClients';
+import { Trash2, Send, ChefHat, Check, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CartItem {
@@ -24,8 +26,20 @@ const STATUS_FLOW: Record<string, { next: string; label: string; icon: React.Rea
 
 type OrderType = 'on_site' | 'online' | 'take_away';
 
+const isReservationToday = (dateStr: string) => {
+  const resDate = new Date(dateStr);
+  const today = new Date();
+  return (
+    resDate.getDate() === today.getDate() &&
+    resDate.getMonth() === today.getMonth() &&
+    resDate.getFullYear() === today.getFullYear()
+  );
+};
+
 export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClearCart }: OrderSummaryProps) {
   const { data: orders, isLoading: ordersLoading } = useOrders();
+  const { data: reservations = [] } = useReservations();
+  const { data: clients = [] } = useClients();
   const createOrder = useCreateOrder();
   const updateStatus = useUpdateOrderStatus();
   const [orderType, setOrderType] = useState<OrderType>('on_site');
@@ -43,6 +57,15 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
       : selectedTable
         ? `Table ${selectedTable.number}`
         : 'Sélectionnez une table';
+
+  const tableReservations = selectedTable
+    ? reservations.filter(
+        (r) =>
+          r.table === selectedTable.id &&
+          r.statut !== 'canceled' &&
+          isReservationToday(r.date_heure)
+      )
+    : [];
 
   const handleRemove = (productId: number) => {
     onUpdateCart(cart.filter((i) => i.product.id !== productId));
@@ -115,6 +138,31 @@ export default function OrderSummary({ selectedTable, cart, onUpdateCart, onClea
           </span>
         )}
       </div>
+
+      {tableReservations.length > 0 && (
+        <div className="p-3 border-b border-amber-500/20 bg-amber-500/5 space-y-2">
+          {tableReservations.map((res) => {
+            const client = clients.find((c) => c.id === res.client);
+            const timeStr = new Date(res.date_heure).toLocaleTimeString('fr-FR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            return (
+              <div key={res.id} className="flex gap-2 items-start text-xs text-amber-600 dark:text-amber-400">
+                <Calendar className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-amber-800 dark:text-amber-200">
+                    Table réservée aujourd'hui à {timeStr}
+                  </p>
+                  <p className="text-[10px] text-amber-700/90 dark:text-amber-400/90 mt-0.5">
+                    Client : {client?.nom || `Client #${res.client}`} ({res.nb_personnes} personnes)
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {activeOrder && activeOrder.items && activeOrder.items.length > 0 && ( // vérif que activeOrder et activeOrder..items existent
         <div className="px-4 py-2 border-b border-border bg-muted/30">

@@ -4,33 +4,27 @@ import { useAdminAuth } from '@/context/AdminAuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LayoutGrid, UtensilsCrossed, ClipboardList,
-  ChevronLeft, BarChart3, FileText, LogOut, Armchair } from 'lucide-react';
+  ChevronLeft, BarChart3, FileText, LogOut, Armchair, Users, Calendar } from 'lucide-react';
 
 
-function AdminRedirect() {
-  const navigate = useNavigate();
-  useEffect(() => {
-    navigate('/pos', { replace: true });
-  }, [navigate]);
-  return null;
-}
+import AdminPasswordModal from '@/components/AdminPasswordModal';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { logout, isAdmin } = useAdminAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // useEffect(() => {
-  //   return () => {
-  //     logout();
-  //   };
-  // }, [logout]);
-
-  if (!isAdmin) return <AdminRedirect />;
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+        <AdminPasswordModal open={true} onClose={() => navigate('/acces')} />
+      </div>
+    );
+  }
 
   const handleLogout = () => {
     logout();
-    navigate('/pos');
+    navigate('/acces');
   };
 
   const navigation = [
@@ -38,6 +32,8 @@ export default function AdminDashboard() {
     { label: 'Catégories', icon: LayoutGrid, path: '/admin/categories' },
     { label: 'Produits', icon: UtensilsCrossed, path: '/admin/products' },
     { label: 'Tables', icon: Armchair, path: '/admin/tables' },
+    { label: 'Clients', icon: Users, path: '/admin/clients' },
+    { label: 'Réservations', icon: Calendar, path: '/admin/reservations' },
     { label: 'Commandes', icon: ClipboardList, path: '/admin/orders' },
     { label: 'Logs', icon: FileText, path: '/admin/logs' },
   ];
@@ -55,7 +51,7 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             {sidebarOpen && (
               <div className="flex-1">
-                <h1 className="text-lg font-bold text-amber-400">CommandeResto</h1>
+                <h1 className="text-lg font-bold text-amber-400">{'< Resto >'}</h1>
                 <p className="text-xs text-slate-400">Administration</p>
               </div>
             )}

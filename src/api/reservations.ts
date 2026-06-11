@@ -16,3 +16,16 @@ export const getReservationsAsync = async (): Promise<Reservation[]> => {
   const { data } = await apiClient.get<Reservation[]>('reservations/');
   return data;
 };
+
+export const updateReservationAsync = async ({
+  id,
+  ...data
+}: { id: number } & Partial<Omit<Reservation, 'id' | 'token_confirmation'>>): Promise<Reservation> => {
+  const { data: response } = await apiClient.patch<Reservation>(`reservations/${id}/`, data);
+  return response;
+};
+
+export const deleteReservationAsync = async (id: number): Promise<void> => {
+  await apiClient.delete(`reservations/${id}/`);
+};
+

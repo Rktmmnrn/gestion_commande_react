@@ -8,7 +8,7 @@ import { useOfflineMode } from '@/hooks/useOfflineMode';
 import { Button } from '@/components/ui/button';
 import type { Product, Table } from '@/types';
 import { toast } from 'sonner'
-import { WifiOff, Settings } from 'lucide-react';
+import { WifiOff, Settings, ArrowLeft } from 'lucide-react';
 
 interface CartItem {
   product: Product;
@@ -121,15 +121,26 @@ export default function POSPage() {
             User
           </span>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setModalOpen(true)}
-          className="gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          Espace Admin
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/acces')}
+            className="text-muted-foreground hover:text-foreground gap-1.5"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setModalOpen(true)}
+            className="gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Espace Admin
+          </Button>
+        </div>
       </nav>
 
       <div className="flex h-[calc(100vh-60px)] overflow-hidden bg-background">

@@ -47,7 +47,7 @@ function Navbar() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/pos')}
+            onClick={() => navigate('/acces')}
             className="text-slate-400 hover:text-white text-xs gap-1"
           >
             <Lock className="w-3 h-3" />
@@ -103,8 +103,8 @@ function Hero() {
         <div className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-8 text-slate-400 text-sm">
           {[
             { icon: Clock, text: 'Ouvert 7j/7 — 11h à 23h' },
-            { icon: MapPin, text: '12 Rue du Palais, Antananarivo' },
-            { icon: Phone, text: '+261 34 00 000 00' },
+            { icon: MapPin, text: 'Jarding des mers, Tuléar' },
+            { icon: Phone, text: '+261 34 28 752 34' },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-2">
               <Icon className="w-4 h-4 text-amber-500" />
@@ -473,7 +473,7 @@ function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <UtensilsCrossed className="w-5 h-5 text-amber-400" />
-              <span className="font-bold text-white">CommandeResto</span>
+              <span className="font-bold text-white">{'< Resto >'}</span>
             </div>
             <p className="text-slate-500 text-sm leading-relaxed">
               Une expérience culinaire unique au cœur de la ville. Réservez votre table dès aujourd'hui.
@@ -493,16 +493,16 @@ function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Nous trouver</h4>
             <div className="space-y-2 text-slate-500 text-sm">
-              <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-amber-500 shrink-0" />12 Rue du Palais, Antananarivo</div>
-              <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-amber-500 shrink-0" />+261 34 00 000 00</div>
+              <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-amber-500 shrink-0" />Jarding des mers, Tuléar</div>
+              <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-amber-500 shrink-0" />+261 34 28 752 34</div>
               <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-amber-500 shrink-0" />Lun – Dim : 11h00 – 23h00</div>
             </div>
           </div>
         </div>
         <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-slate-600 text-xs">© 2025 CommandeResto. Tous droits réservés.</p>
+          <p className="text-slate-600 text-xs">© 2026 {'<Resto >'}. Tous droits réservés. Design by Fenohery</p>
           <button
-            onClick={() => navigate('/pos')}
+            onClick={() => navigate('/acces')}
             className="text-slate-700 hover:text-slate-500 text-xs flex items-center gap-1 transition-colors"
           >
             <Lock className="w-3 h-3" />

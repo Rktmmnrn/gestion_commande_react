@@ -13,6 +13,9 @@ import ProductsAdmin from '@/pages/admin/ProductsAdmin';
 import TablesAdmin from '@/pages/admin/TablesAdmin';
 import OrdersListPage from '@/pages/admin/OrdersListPage';
 import ActivityLogPage from '@/pages/admin/ActivityLogPage';
+import ClientsAdmin from '@/pages/admin/ClientsAdmin';
+import ReservationsAdmin from '@/pages/admin/ReservationsAdmin';
+import AccesPage from '@/pages/AccesPage';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -29,6 +32,7 @@ const App = () => (
           }}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/acces" element={<AccesPage />} />
 
               <Route path="/pos" element={<POSPage />} />
 
@@ -38,6 +42,8 @@ const App = () => (
                 <Route path="categories" element={<CategoriesAdmin />} />
                 <Route path="products" element={<ProductsAdmin />} />
                 <Route path="tables" element={<TablesAdmin />} />
+                <Route path="clients" element={<ClientsAdmin />} />
+                <Route path="reservations" element={<ReservationsAdmin />} />
                 <Route path="orders" element={<OrdersListPage />} />
                 <Route path="logs" element={<ActivityLogPage />} />
               </Route>
