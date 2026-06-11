@@ -217,7 +217,8 @@ function ReservationSection() {
   });
 
   const onClientSubmit = (data: ClientPayload) => {
-    createClient.mutate(data, {
+    const payload = data as Required<ClientPayload>;
+    createClient.mutate(payload, {
       onSuccess: (client) => {
         setClientId(client.id);
         setStep(2);
@@ -228,9 +229,10 @@ function ReservationSection() {
   };
 
   const onReservationSubmit = (data: ReservationPayload) => {
+    const payload = data as Required<ReservationPayload>;
     if (!clientId) return;
     createReservation.mutate(
-      { ...data, client: clientId },
+      { ...payload, client: clientId },
       {
         onSuccess: () => {
           setDone(true);
