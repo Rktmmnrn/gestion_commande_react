@@ -67,7 +67,7 @@ function Navbar() {
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-slate-950">
+    <section className="relative min-h-screen top-[20px] flex items-center justify-center overflow-hidden bg-slate-950">
       <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-slate-950 to-slate-900" />
       <div className="absolute top-1/4 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
@@ -94,7 +94,7 @@ function Hero() {
           </a>
           <a href="#reservation">
             <Button size="lg" variant="outline"
-              className="border-white/20 text-white hover:bg-white/10 font-semibold px-8 text-base gap-2">
+              className="border-white/20 hover:bg-white/10 font-semibold px-8 text-base gap-2">
               <CalendarCheck className="w-5 h-5" />
               Réserver une table
             </Button>
